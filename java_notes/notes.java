@@ -1,9 +1,14 @@
 public class notes {
+  /**
+   *
+   * @param args
+   */
   public static void main(String[] args) {
     System.out.println("Hello World");
     x();
     y();
   }
+
 
   public static void x() {
     String intro = "Hello There...";

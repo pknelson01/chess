@@ -23,10 +23,7 @@ public class ChessPiece {
         this.pieceColor = pieceColor;
         this.type = type;
 
-        String pieceMoves(ChessBoard., ChessPosition)
     }
-
-
 
     /**
      * The various different chess piece options
@@ -56,12 +53,45 @@ public class ChessPiece {
      *
      * @return Collection of valid moves
      */
-    public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
-        ChessPiece piece = board.getPiece(myPosition);
-        if (piece.getPieceType() == PieceType.BISHOP) {
-            return List.of(new ChessMove(new ChessPosition(5, 4), new ChessPosition(1, 8), null));
+    public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition position) {
+        PieceMovesCalc calculator = null;
+
+        if (this.type == PieceType.KING) {
+            calculator = new KingMovesCalc();
+        } else if (this.type == PieceType.QUEEN) {
+            calculator = new QueenMovesCalc();
+        } else if (this.type == PieceType.PAWN) {
+            calculator = new PawnMovesCalc();
+        } else if (this.type == PieceType.ROOK) {
+            calculator = new RookMovesCalc();
+        } else if (this.type == PieceType.KNIGHT) {
+            calculator = new KnightMovesCalc();
+        } else if (this.type == PieceType.BISHOP) {
+            calculator = new BishopMovesCalc();
         }
-        return List.of();
-        //throw new RuntimeException("Not implemented");
+
+        if (calculator == null) {
+            return List.of();
+        }
+        return calculator.pieceMoves(board, position);
+    }
+
+    public Collection<ChessMove> KingMovesCalc() {
+        throw new RuntimeException("Not implemented");
+    }
+    public Collection<ChessMove> QueenMovesCalc() {
+        throw new RuntimeException("Not implemented");
+    }
+    public Collection<ChessMove> PawnMovesCalc() {
+        throw new RuntimeException("Not implemented");
+    }
+    public Collection<ChessMove> RookMovesCalc() {
+        throw new RuntimeException("Not implemented");
+    }
+    public Collection<ChessMove> KnightMovesCalc() {
+        throw new RuntimeException("Not implemented");
+    }
+    public Collection<ChessMove> BishopMovesCalc() {
+        throw new RuntimeException("Not implemented");
     }
 }

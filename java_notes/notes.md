@@ -332,3 +332,30 @@ public class MyClass {
     //  instance, etc)
 }
 ```
+
+### Java Records
+- Very common to have Java classes that only exist to represent data
+- These are called POJO's (plain old java object)
+- Java Records make it so that we don't have to write POJO's
+```java
+public record Pet(int id, String name, String type){}
+```
+- Immutability 
+- Simplified constructor syntax
+  - Pet p = new Pet(1, "Obi", "Dog");
+- Automatic getters
+  - Access by using field name (without get): p.name();
+- Automatic equals/hashcode/toString that compares all fields
+- Since you can't change the record, you can create a method that "changes" the record by taking in the record and then just returning a new instance. 
+```java
+public record Pet(int id, String name, String type) {
+    Pet rename(String newName) {
+        return new Pet(id, newName, type);
+    }
+}
+```
+
+
+
+
+

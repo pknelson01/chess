@@ -8,6 +8,7 @@ package chess;
  */
 public class ChessBoard {
 
+    ChessPiece[][] squares = new ChessPiece[8][8]; // 0 - 7
     public ChessBoard() {
         
     }
@@ -19,7 +20,8 @@ public class ChessBoard {
      * @param piece    the piece to add
      */
     public void addPiece(ChessPosition position, ChessPiece piece) {
-        throw new RuntimeException("Not implemented");
+        squares[position.getRow()-1][position.getColumn()-1] = piece; // The numbers being passed in from the tests are 1-based rather than 0-based (Java) so we need to add a conversion (-1) to account for that.
+        //throw new RuntimeException("Not implemented");
     }
 
     /**
@@ -30,7 +32,8 @@ public class ChessBoard {
      * position
      */
     public ChessPiece getPiece(ChessPosition position) {
-        throw new RuntimeException("Not implemented");
+        return squares[position.getRow()-1][position.getColumn()-1];
+        //throw new RuntimeException("Not implemented");
     }
 
     /**

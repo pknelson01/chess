@@ -3,6 +3,11 @@ package chess;
 import java.util.Collection;
 import java.util.List;
 
+/*
+Design Structure and Plan:
+    - Create 6 sub-classes (1 for each piece type) that overrides the ChessPiece method
+ */
+
 /**
  * Represents a single chess piece
  * <p>
@@ -17,19 +22,16 @@ public class ChessPiece {
     public ChessPiece(ChessGame.TeamColor pieceColor, ChessPiece.PieceType type) {
         this.pieceColor = pieceColor;
         this.type = type;
+
+        String pieceMoves(ChessBoard., ChessPosition)
     }
+
+
 
     /**
      * The various different chess piece options
      */
-    public enum PieceType {
-        KING,
-        QUEEN,
-        BISHOP,
-        KNIGHT,
-        ROOK,
-        PAWN
-    }
+    public enum PieceType {KING, QUEEN, BISHOP, KNIGHT, ROOK, PAWN}
 
     /**
      * @return Which team this chess piece belongs to

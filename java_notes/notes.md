@@ -292,7 +292,7 @@ public final void myMethod() {...}
 
 ### Enums
 - Like a class
-- User where you otherwise have unrestricted String with only a few values being valid
+- Used where you otherwise have unrestricted String with only a few values being valid
 ```java
 public enum Gender {
     Male, Female;

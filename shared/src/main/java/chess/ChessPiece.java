@@ -57,41 +57,22 @@ public class ChessPiece {
         PieceMovesCalc calculator = null;
 
         if (this.type == PieceType.KING) {
-            calculator = new KingMovesCalc();
+            calculator = new PieceMovesCalc.KingMovesCalc();
         } else if (this.type == PieceType.QUEEN) {
-            calculator = new QueenMovesCalc();
+            calculator = new PieceMovesCalc.QueenMovesCalc();
         } else if (this.type == PieceType.PAWN) {
-            calculator = new PawnMovesCalc();
+            calculator = new PieceMovesCalc.PawnMovesCalc();
         } else if (this.type == PieceType.ROOK) {
-            calculator = new RookMovesCalc();
+            calculator = new PieceMovesCalc.RookMovesCalc();
         } else if (this.type == PieceType.KNIGHT) {
-            calculator = new KnightMovesCalc();
+            calculator = new PieceMovesCalc.KnightMovesCalc();
         } else if (this.type == PieceType.BISHOP) {
-            calculator = new BishopMovesCalc();
+            calculator = new PieceMovesCalc.BishopMovesCalc();
         }
 
         if (calculator == null) {
             return List.of();
         }
         return calculator.pieceMoves(board, position);
-    }
-
-    public Collection<ChessMove> KingMovesCalc() {
-        throw new RuntimeException("Not implemented");
-    }
-    public Collection<ChessMove> QueenMovesCalc() {
-        throw new RuntimeException("Not implemented");
-    }
-    public Collection<ChessMove> PawnMovesCalc() {
-        throw new RuntimeException("Not implemented");
-    }
-    public Collection<ChessMove> RookMovesCalc() {
-        throw new RuntimeException("Not implemented");
-    }
-    public Collection<ChessMove> KnightMovesCalc() {
-        throw new RuntimeException("Not implemented");
-    }
-    public Collection<ChessMove> BishopMovesCalc() {
-        throw new RuntimeException("Not implemented");
     }
 }

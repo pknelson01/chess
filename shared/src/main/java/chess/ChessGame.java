@@ -66,7 +66,30 @@ public class ChessGame {
      * @return True if the specified team is in check
      */
     public boolean isInCheck(TeamColor teamColor) {
-        throw new RuntimeException("Not implemented");
+
+        ChessPosition kingPos = null;
+
+        for (int row = 1; row <= 8; row++) {
+            for (int col = 1; col <= 8; col++) {
+                ChessPosition pos = new ChessPosition(row, col);
+                ChessPiece piece = board.getPiece(pos);
+
+                if (piece != null && piece.getTeamColor() == teamColor && piece.getPieceType() == ChessPiece.PieceType.KING) {
+                    kingPos = pos;
+                }
+            }
+        }
+
+        // Check with TA or someone who plays chess more often than me for the following block of code but I am adding it as a safety net even though I am not sure if it is even possible...
+        if (kingPosition == null) {
+            return false;
+        }
+
+
+
+
+        // Not in Check...
+        return false;
     }
 
     /**

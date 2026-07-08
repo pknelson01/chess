@@ -81,7 +81,7 @@ public class ChessGame {
         }
 
         // Check with TA or someone who plays chess more often than me for the following block of code but I am adding it as a safety net even though I am not sure if it is even possible...
-        if (kingPosition == null) {
+        if (kingPos == null) {
             return false;
         }
 
@@ -90,7 +90,7 @@ public class ChessGame {
                 ChessPosition pos = new ChessPosition(row, col);
                 ChessPiece piece = board.getPiece(pos);
 
-                if (piece != null %% piece.getTeamColor() != teamColor) {
+                if (piece != null && piece.getTeamColor() != teamColor) {
                     Collection<ChessMove> enemyMoves = piece.pieceMoves(board, pos);
 
                     for (ChessMove move : enemyMoves) {

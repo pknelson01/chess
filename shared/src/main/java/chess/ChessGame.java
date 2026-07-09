@@ -1,7 +1,6 @@
 package chess;
 
 import java.util.Collection;
-import java.util.ArrayList;
 
 /**
  * A class that can manage a chess game, making moves on a board
@@ -47,55 +46,7 @@ public class ChessGame {
      * startPosition
      */
     public Collection<ChessMove> validMoves(ChessPosition startPosition) {
-
-        ChessPiece piece = board.getPiece(startPosition);
-
-        if (piece == null) {
-            return null;
-        }
-
-        ChessGame.TeamColor pieceColor = piece.getTeamColor();
-        Collection<ChessMove> moveOptions = piece.pieceMoves(board, startPosition);
-        ArrayList<ChessMove> legalMoves = new ArrayList<>();
-
-        for (ChessMove move : moveOptions) {
-
-            // temporary copy of the board
-            ChessBoard copyBoard = new ChessBoard();
-
-            for (int row = 1; row <= 8; row++) {
-                for (int col = 1; col <= 8; col++) {
-                    ChessPosition pos = new ChessPosition(row, col);
-                    ChessPiece pieceAtPos = board.getPiece(pos);
-
-                    if (pieceAtPos != null) {
-                        copyBoard.addPiece(pos, pieceAtPos);
-                    }
-                }
-            }
-
-            ChessPiece movingPiece = copyBoard.getPiece(move.getStartPosition());
-
-            if (move.getPromotionPiece() != null) {
-                ChessPiece promotedPiece = new ChessPiece(pieceColor, move.getPromotionPiece());
-                copyBoard.addPiece(move.getEndPosition(), promotedPiece);
-            } else {
-                copyBoard.addPiece(move.getEndPosition(), movingPiece);
-            }
-
-            copyBoard.addPiece(move.getStartPosition(), null);
-            ChessBoard ogBoard = this.board;
-            this.board = copyBoard;
-            boolean leavesKingInCheck = isInCheck(pieceColor);
-            this.board = ogBoard;
-
-            if (!leavesKingInCheck) {
-                legalMoves.add(move);
-            }
-        }
-
-        return legalMoves;
-
+        throw new RuntimeException("Not implemented");
     }
 
     /**
@@ -105,37 +56,7 @@ public class ChessGame {
      * @throws InvalidMoveException if move is invalid
      */
     public void makeMove(ChessMove move) throws InvalidMoveException {
-
-        ChessPiece piece = board.getPiece(move.getStartPosition());
-
-        if (piece == null) {
-            throw new InvalidMoveException("There is no piece at the start position");
-        }
-
-        if (piece.getTeamColor() != teamTurn) {
-            throw new InvalidMoveException("It is not that team's turn");
-        }
-
-        Collection<ChessMove> legalMoves = validMoves(move.getStartPosition());
-
-        if (!legalMoves.contains(move)) {
-            throw new InvalidMoveException("That move is not a legal move");
-        }
-
-        if (move.getPromotionPiece() != null) {
-            ChessPiece promotedPiece = new ChessPiece(piece.getTeamColor(), move.getPromotionPiece());
-            board.addPiece(move.getEndPosition(), promotedPiece);
-        } else {
-            board.addPiece(move.getEndPosition(), piece);
-        }
-
-        board.addPiece(move.getStartPosition(), null);
-
-        if (teamTurn == TeamColor.WHITE) {
-            teamTurn = TeamColor.BLACK;
-        } else {
-            teamTurn = TeamColor.WHITE;
-        }
+        throw new RuntimeException("Not implemented");
     }
 
     /**

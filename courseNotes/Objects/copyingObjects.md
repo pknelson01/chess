@@ -1,0 +1,16 @@
+# Copying objects
+- To anticipate what a certain move will do, you will need to copy the current state of the checkboard and then make that move to see what happens with each possible move
+- Motivation
+  - In programming, it is common to need to make a copy and existing object
+  - two ways
+    - shallow
+      - copy the linked list but not all of the nodes
+      - can still affect the original so not the most effective
+    - deep
+      - copies the linked list object as well as the nodes
+    - Immutable Objects
+      - if something is immutable, we don't need to deep copy those becase you cannot change those. (This is where a shallow copy is a good idea)
+- Writing classes that support copying
+  - "clone" method on each class
+    - 
+  - copy constructors

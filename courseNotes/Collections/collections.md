@@ -47,3 +47,35 @@
 - ArrayDeque (fifo)
 - LinkedList (fifo)
 - PriorityQueue (priority queue)
+- Queue types:
+  - FIFO -> "First In First Out"
+  - LIFO -> "Last In First Out"
+  - Priority -> "Priority rankings"
+
+
+## Deque
+- A queue that supports insertion from both ends of the queue
+  - addFirst(), addLast()
+  - peekFirst(), peekLast()
+  - removeFirst(), removeLast()
+- ArrayDeque
+- LinkedList
+
+
+## Stack
+- Deprecated
+- if you need a stack, use a deque
+
+
+## Map
+- A collection of key-value pairs
+  - put(key, value) -> replaces the value at that given key
+  - get(key)
+  - contains(key)
+  - remove(key)
+  - keySet()
+  - values()
+  - entrySet()
+- HashMap
+- TreeMap
+- LinkedHashMap

@@ -11,3 +11,7 @@ out/
 
 ### Chess project ###
 server/**/db.properties
+
+### Phase-3 set up didn't work because of the .idea and .iml files
+.idea/
+*.iml

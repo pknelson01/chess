@@ -1,0 +1,159 @@
+================================================================================
+INSTRUCTIONS FOR NEXT CLAUDE INSTANCE
+================================================================================
+
+PROJECT LOCATION:
+/Users/parkernelson/Desktop/Education/BYU/ML/chess/shared/src/main/java/chess/
+
+FILE BEING WORKED ON:
+ChessGame.java (in the directory above)
+
+================================================================================
+ALL USER INSTRUCTIONS (follow these exactly)
+================================================================================
+
+1. Implement one step at a time. After completing each step, give an in-depth
+   explanation of what was done and what file(s) were updated. Then WAIT for
+   the user to say to move on before starting the next step.
+
+2. Add a comment for every block of code written so the user can understand
+   what is happening.
+
+3. Write code like a college student who is just now learning Java. No advanced
+   or clever coding. Everything should be simple and easy to understand.
+
+4. Do NOT change any existing code. Only add to what is already there. Do not
+   modify anything that was already in the file before you started.
+
+5. Keep all board copying logic inside ChessGame.java. Do not add helper
+   methods to other classes like ChessBoard.
+
+6. En passant is step 7 and castling is step 8.
+
+================================================================================
+CURRENT PROGRESS
+================================================================================
+
+Steps 1, 2, and 3 are COMPLETE. Do not redo them.
+
+STEP 1 - COMPLETE
+  Implemented in ChessGame.java:
+  - Added private ChessBoard board field
+  - Added private TeamColor teamTurn field
+  - Filled in the constructor: creates a new ChessBoard, calls resetBoard(),
+    sets teamTurn to WHITE
+  - Implemented getTeamTurn() - returns teamTurn
+  - Implemented setTeamTurn(TeamColor team) - sets teamTurn
+  - Implemented getBoard() - returns board
+  - Implemented setBoard(ChessBoard board) - sets this.board
+
+STEP 2 - COMPLETE
+  Implemented isInCheck(TeamColor teamColor) in ChessGame.java:
+  - Pass 1: loops all 64 squares to find the given team's king position
+  - Pass 2: loops all 64 squares again to find all enemy pieces, calls
+    pieceMoves() on each, and checks if any move lands on the king's square
+  - Returns true if any enemy move reaches the king, false otherwise
+  - NOTE: There is NO null check for kingPosition. The user confirmed this is
+    unnecessary because a king will always be on the board in a valid game.
+
+STEP 3 - COMPLETE
+  Implemented validMoves(ChessPosition startPosition) in ChessGame.java:
+  - Returns null if no piece is at startPosition
+  - Calls piece.pieceMoves() to get all candidate moves
+  - For each candidate move:
+      - Manually copies the real board into a new ChessBoard square by square
+      - Applies the move to the copy (handles pawn promotion too)
+      - Temporarily swaps this.board with the copy board
+      - Calls isInCheck() to see if our king is in danger after the move
+      - Swaps the real board back in immediately after
+      - If the king is NOT in check, the move is added to legalMoves
+  - Returns the legalMoves list
+
+================================================================================
+REMAINING STEPS TO IMPLEMENT
+================================================================================
+
+STEP 4 - makeMove(ChessMove move)
+  - Throws InvalidMoveException if it is not the correct team's turn
+    (check the piece's team color vs this.teamTurn)
+  - Throws InvalidMoveException if the move is not in the validMoves() list
+    for the piece at the starting position
+  - If the move is legal, apply it to the real board:
+      - If it is a pawn promotion, place the promoted piece at the end position
+      - Otherwise move the piece normally to the end position
+      - Set the start position to null
+  - After the move, flip teamTurn to the other team
+    (if WHITE just moved, set to BLACK and vice versa)
+
+STEP 5 - isInCheckmate(TeamColor teamColor)
+  - Returns true if BOTH of the following are true:
+      1. isInCheck(teamColor) returns true
+      2. The team has NO legal moves across ALL of their pieces
+  - To check for no legal moves: loop all 64 squares, find pieces belonging
+    to teamColor, call validMoves() on each, if any returns a non-empty list
+    then it is NOT checkmate
+  - Returns false otherwise
+
+STEP 6 - isInStalemate(TeamColor teamColor)
+  - Returns true if BOTH of the following are true:
+      1. isInCheck(teamColor) returns FALSE (king is NOT in danger)
+      2. The team has NO legal moves across ALL of their pieces
+  - Same loop approach as isInCheckmate to check for no legal moves
+  - Returns false otherwise
+
+STEP 7 - En Passant (special pawn capture rule)
+  En passant is a special pawn capture that can only happen immediately after
+  an opponent pawn moves two squares forward from its starting row.
+  The capturing pawn must be on the 5th rank (row 5 for white, row 4 for black).
+  The capture lands on the square the opponent pawn passed through, and the
+  opponent pawn is removed even though the capture did not land on its square.
+
+  To implement this:
+  - Add a field to track the "en passant target square" (the square a pawn
+    just skipped over). Set it to null by default.
+  - In makeMove(), after a pawn moves two squares, set the en passant target
+    square to the square it skipped over.
+  - After any other move, reset the en passant target square to null.
+  - In PawnMC (or in validMoves logic), add the en passant capture as a
+    candidate move when the en passant target square is set and a pawn is
+    in the right position.
+  - In makeMove(), when an en passant capture is made, remove the captured
+    pawn from the board (it is NOT on the end square of the move, it is
+    one square behind it).
+
+STEP 8 - Castling (king and rook special move)
+  Castling is a special move where the king moves two squares toward a rook
+  and the rook jumps to the other side of the king. There are two types:
+  kingside (short) and queenside (long).
+
+  Conditions that must ALL be true for castling to be legal:
+  - Neither the king nor the rook involved has moved yet this game
+  - There are no pieces between the king and the rook
+  - The king is not currently in check
+  - The king does not pass through a square that is under attack
+  - The king does not end up in check after castling
+
+  To implement this:
+  - Add boolean fields to track whether each king and each rook has moved
+    (e.g. whiteKingMoved, whiteKingsideRookMoved, whiteQueensideRookMoved,
+    blackKingMoved, blackKingsideRookMoved, blackQueensideRookMoved)
+  - In makeMove(), set the appropriate flag to true when a king or rook moves
+  - Add castling as candidate moves in validMoves() when all conditions are met
+  - In makeMove(), when a castling move is detected (king moves two squares),
+    also move the rook to its new square on the same move
+
+================================================================================
+KEY THINGS TO KNOW ABOUT THE CODEBASE
+================================================================================
+
+- ChessPosition uses 1-based row and column (1 through 8), NOT 0-based
+- ChessBoard.addPiece(position, null) is how you remove a piece from a square
+- ChessPiece.pieceMoves(board, position) returns all physically possible moves
+  but does NOT account for check rules - that is ChessGame's job
+- ChessBoard.resetBoard() sets up the standard starting position
+- All piece move logic lives in PieceMovesCalc.java as inner classes
+- InvalidMoveException is already defined in InvalidMoveException.java
+- The TeamColor enum (WHITE, BLACK) lives inside ChessGame
+- ChessPiece.PieceType enum: KING, QUEEN, BISHOP, KNIGHT, ROOK, PAWN
+
+================================================================================

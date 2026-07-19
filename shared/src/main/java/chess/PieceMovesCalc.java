@@ -6,41 +6,7 @@ import java.util.ArrayList;
 public interface PieceMovesCalc {
     Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition position);
 
-    class KingMovesCalc implements PieceMovesCalc {
-        public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition position) {
-            ArrayList<ChessMove> moves = new ArrayList<>();
-            int row = position.getRow();
-            int col = position.getColumn();
-            ChessPiece myPiece = board.getPiece(position);
-            ChessGame.TeamColor myColor = myPiece.getTeamColor();
-
-            int[][] offsets = {{1,0},{1,1},{0,1},{-1,1},{-1,0},{-1,-1},{0,-1},{1,-1}};
-            for (int[] offset : offsets) {
-                int newRow = row + offset[0];
-                int newCol = col + offset[1];
-                if (newRow >= 1 && newRow <= 8 && newCol >= 1 && newCol <= 8) {
-                    ChessPosition newPos = new ChessPosition(newRow, newCol);
-                    ChessPiece pieceAtPos = board.getPiece(newPos);
-                    if (pieceAtPos == null || pieceAtPos.getTeamColor() != myColor) {
-                        moves.add(new ChessMove(position, newPos, null));
-                    }
-                }
-            }
-
-            return moves;
-        }
-    }
-
-    class QueenMovesCalc implements PieceMovesCalc {
-        public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition position) {
-            ArrayList<ChessMove> moves = new ArrayList<>();
-            moves.addAll(new RookMovesCalc().pieceMoves(board, position));
-            moves.addAll(new BishopMovesCalc().pieceMoves(board, position));
-            return moves;
-        }
-    }
-
-    class PawnMovesCalc implements PieceMovesCalc {
+    class PawnMC implements PieceMovesCalc {
         public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition position) {
             ArrayList<ChessMove> moves = new ArrayList<>();
             int row = position.getRow();
@@ -125,7 +91,32 @@ public interface PieceMovesCalc {
         }
     }
 
-    class RookMovesCalc implements PieceMovesCalc {
+    class KingMC implements PieceMovesCalc {
+        public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition position) {
+            ArrayList<ChessMove> moves = new ArrayList<>();
+            int row = position.getRow();
+            int col = position.getColumn();
+            ChessPiece myPiece = board.getPiece(position);
+            ChessGame.TeamColor myColor = myPiece.getTeamColor();
+
+            int[][] offsets = {{1,0},{1,1},{0,1},{-1,1},{-1,0},{-1,-1},{0,-1},{1,-1}};
+            for (int[] offset : offsets) {
+                int newRow = row + offset[0];
+                int newCol = col + offset[1];
+                if (newRow >= 1 && newRow <= 8 && newCol >= 1 && newCol <= 8) {
+                    ChessPosition newPos = new ChessPosition(newRow, newCol);
+                    ChessPiece pieceAtPos = board.getPiece(newPos);
+                    if (pieceAtPos == null || pieceAtPos.getTeamColor() != myColor) {
+                        moves.add(new ChessMove(position, newPos, null));
+                    }
+                }
+            }
+
+            return moves;
+        }
+    }
+
+    class RookMC implements PieceMovesCalc {
         public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition position) {
             ArrayList<ChessMove> moves = new ArrayList<>();
             int row = position.getRow();
@@ -206,7 +197,7 @@ public interface PieceMovesCalc {
         }
     }
 
-    class KnightMovesCalc implements PieceMovesCalc {
+    class KnightMC implements PieceMovesCalc {
         public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition position) {
             ArrayList<ChessMove> moves = new ArrayList<>();
             int row = position.getRow();
@@ -231,7 +222,16 @@ public interface PieceMovesCalc {
         }
     }
 
-    class BishopMovesCalc implements PieceMovesCalc {
+    class QueenMC implements PieceMovesCalc {
+        public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition position) {
+            ArrayList<ChessMove> moves = new ArrayList<>();
+            moves.addAll(new RookMC().pieceMoves(board, position));
+            moves.addAll(new BishopMC().pieceMoves(board, position));
+            return moves;
+        }
+    }
+
+    class BishopMC implements PieceMovesCalc {
         public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition position) {
             ArrayList<ChessMove> moves = new ArrayList<>();
             int row = position.getRow();

@@ -58,17 +58,17 @@ public class ChessPiece {
         PieceMovesCalc calculator = null;
 
         if (this.type == PieceType.KING) {
-            calculator = new PieceMovesCalc.KingMovesCalc();
+            calculator = new PieceMovesCalc.KingMC();
         } else if (this.type == PieceType.QUEEN) {
-            calculator = new PieceMovesCalc.QueenMovesCalc();
+            calculator = new PieceMovesCalc.QueenMC();
         } else if (this.type == PieceType.PAWN) {
-            calculator = new PieceMovesCalc.PawnMovesCalc();
+            calculator = new PieceMovesCalc.PawnMC();
         } else if (this.type == PieceType.ROOK) {
-            calculator = new PieceMovesCalc.RookMovesCalc();
+            calculator = new PieceMovesCalc.RookMC();
         } else if (this.type == PieceType.KNIGHT) {
-            calculator = new PieceMovesCalc.KnightMovesCalc();
+            calculator = new PieceMovesCalc.KnightMC();
         } else if (this.type == PieceType.BISHOP) {
-            calculator = new PieceMovesCalc.BishopMovesCalc();
+            calculator = new PieceMovesCalc.BishopMC();
         }
 
         if (calculator == null) {

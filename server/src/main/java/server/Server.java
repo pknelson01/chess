@@ -6,6 +6,7 @@ import dataaccess.MemoryDataAccess;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import service.*;
+import service.requestresult.*;
 
 public class Server {
 

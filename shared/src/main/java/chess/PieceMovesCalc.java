@@ -6,6 +6,29 @@ import java.util.ArrayList;
 public interface PieceMovesCalc {
     Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition position);
 
+    /**
+     * Adds every in-bounds single-step move from the given offsets that lands on
+     * an empty square or an enemy piece. Shared by the king and knight, whose
+     * movement differs only by the set of offsets.
+     */
+    static void addStepMoves(ChessBoard board, ChessPosition position,
+                             ArrayList<ChessMove> moves, int[][] offsets) {
+        int row = position.getRow();
+        int col = position.getColumn();
+        ChessGame.TeamColor myColor = board.getPiece(position).getTeamColor();
+        for (int[] offset : offsets) {
+            int newRow = row + offset[0];
+            int newCol = col + offset[1];
+            if (newRow >= 1 && newRow <= 8 && newCol >= 1 && newCol <= 8) {
+                ChessPosition newPos = new ChessPosition(newRow, newCol);
+                ChessPiece pieceAtPos = board.getPiece(newPos);
+                if (pieceAtPos == null || pieceAtPos.getTeamColor() != myColor) {
+                    moves.add(new ChessMove(position, newPos, null));
+                }
+            }
+        }
+    }
+
     class PawnMC implements PieceMovesCalc {
         public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition position) {
             ArrayList<ChessMove> moves = new ArrayList<>();
@@ -94,24 +117,8 @@ public interface PieceMovesCalc {
     class KingMC implements PieceMovesCalc {
         public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition position) {
             ArrayList<ChessMove> moves = new ArrayList<>();
-            int row = position.getRow();
-            int col = position.getColumn();
-            ChessPiece myPiece = board.getPiece(position);
-            ChessGame.TeamColor myColor = myPiece.getTeamColor();
-
             int[][] offsets = {{1,0},{1,1},{0,1},{-1,1},{-1,0},{-1,-1},{0,-1},{1,-1}};
-            for (int[] offset : offsets) {
-                int newRow = row + offset[0];
-                int newCol = col + offset[1];
-                if (newRow >= 1 && newRow <= 8 && newCol >= 1 && newCol <= 8) {
-                    ChessPosition newPos = new ChessPosition(newRow, newCol);
-                    ChessPiece pieceAtPos = board.getPiece(newPos);
-                    if (pieceAtPos == null || pieceAtPos.getTeamColor() != myColor) {
-                        moves.add(new ChessMove(position, newPos, null));
-                    }
-                }
-            }
-
+            addStepMoves(board, position, moves, offsets);
             return moves;
         }
     }
@@ -200,24 +207,8 @@ public interface PieceMovesCalc {
     class KnightMC implements PieceMovesCalc {
         public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition position) {
             ArrayList<ChessMove> moves = new ArrayList<>();
-            int row = position.getRow();
-            int col = position.getColumn();
-            ChessPiece myPiece = board.getPiece(position);
-            ChessGame.TeamColor myColor = myPiece.getTeamColor();
-
             int[][] offsets = {{2,1},{2,-1},{-2,1},{-2,-1},{1,2},{1,-2},{-1,2},{-1,-2}};
-            for (int[] offset : offsets) {
-                int newRow = row + offset[0];
-                int newCol = col + offset[1];
-                if (newRow >= 1 && newRow <= 8 && newCol >= 1 && newCol <= 8) {
-                    ChessPosition newPos = new ChessPosition(newRow, newCol);
-                    ChessPiece pieceAtPos = board.getPiece(newPos);
-                    if (pieceAtPos == null || pieceAtPos.getTeamColor() != myColor) {
-                        moves.add(new ChessMove(position, newPos, null));
-                    }
-                }
-            }
-
+            addStepMoves(board, position, moves, offsets);
             return moves;
         }
     }

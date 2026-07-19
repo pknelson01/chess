@@ -198,56 +198,54 @@ public class ChessGame {
      * @return True if the specified team is in check
      */
     public boolean isInCheck(TeamColor teamColor) {
+        // Find the king, then see if any opposing piece can reach its square
+        ChessPosition kingPosition = findKing(teamColor);
+        return kingPosition != null && isAttacked(kingPosition, teamColor);
+    }
 
-        // First I need to find where the king of the given team is on the board
-        ChessPosition kingPosition = null;
-
-        // Loop through every row on the board (1 through 8)
+    /**
+     * Finds the position of the given team's king.
+     *
+     * @param teamColor which team's king to locate
+     * @return the king's position, or null if it is not on the board
+     */
+    private ChessPosition findKing(TeamColor teamColor) {
         for (int row = 1; row <= 8; row++) {
-
-            // Loop through every column on the board (1 through 8)
             for (int col = 1; col <= 8; col++) {
-
-                // Get the piece sitting at this square
                 ChessPosition pos = new ChessPosition(row, col);
                 ChessPiece piece = board.getPiece(pos);
-
-                // Check if this square has a piece, it belongs to our team, and it's the king
-                if (piece != null && piece.getTeamColor() == teamColor && piece.getPieceType() == ChessPiece.PieceType.KING) {
-                    // Found the king, save its position
-                    kingPosition = pos;
+                if (piece != null && piece.getTeamColor() == teamColor
+                        && piece.getPieceType() == ChessPiece.PieceType.KING) {
+                    return pos;
                 }
             }
         }
+        return null;
+    }
 
-        // Now I need to check if any enemy piece can attack the king's position
-        // Loop through every square again, this time looking for opponent pieces
+    /**
+     * Determines whether any piece not belonging to teamColor can move onto the
+     * target square.
+     *
+     * @param target    the square to test
+     * @param teamColor the defending team (its own pieces are ignored)
+     * @return true if an opposing piece can reach the target
+     */
+    private boolean isAttacked(ChessPosition target, TeamColor teamColor) {
         for (int row = 1; row <= 8; row++) {
-
             for (int col = 1; col <= 8; col++) {
-
-                // Get the piece at this square
                 ChessPosition pos = new ChessPosition(row, col);
                 ChessPiece piece = board.getPiece(pos);
-
-                // Only care about pieces that belong to the opposing team
-                if (piece != null && piece.getTeamColor() != teamColor) {
-
-                    // Get all the moves this enemy piece can make
-                    Collection<ChessMove> enemyMoves = piece.pieceMoves(board, pos);
-
-                    // Check each move to see if it lands on the king's square
-                    for (ChessMove move : enemyMoves) {
-                        if (move.getEndPosition().equals(kingPosition)) {
-                            // An enemy piece can reach the king, so we are in check
-                            return true;
-                        }
+                if (piece == null || piece.getTeamColor() == teamColor) {
+                    continue;
+                }
+                for (ChessMove move : piece.pieceMoves(board, pos)) {
+                    if (move.getEndPosition().equals(target)) {
+                        return true;
                     }
                 }
             }
         }
-
-        // No enemy piece can reach the king, so we are not in check
         return false;
     }
 
@@ -258,40 +256,8 @@ public class ChessGame {
      * @return True if the specified team is in checkmate
      */
     public boolean isInCheckmate(TeamColor teamColor) {
-
-        // Checkmate can only happen if the team is currently in check.
-        // If they are NOT in check, it is definitely not checkmate.
-        if (!isInCheck(teamColor)) {
-            return false;
-        }
-
-        // Now we need to check if this team has ANY legal move at all.
-        // Loop through every row on the board (1 through 8)
-        for (int row = 1; row <= 8; row++) {
-
-            // Loop through every column on the board (1 through 8)
-            for (int col = 1; col <= 8; col++) {
-
-                // Get the piece sitting at this square
-                ChessPosition pos = new ChessPosition(row, col);
-                ChessPiece piece = board.getPiece(pos);
-
-                // Only look at pieces that belong to the team we are checking
-                if (piece != null && piece.getTeamColor() == teamColor) {
-
-                    // Get all the legal moves for this piece
-                    Collection<ChessMove> legalMoves = validMoves(pos);
-
-                    // If this piece has at least one legal move, it is NOT checkmate
-                    if (legalMoves != null && !legalMoves.isEmpty()) {
-                        return false;
-                    }
-                }
-            }
-        }
-
-        // The team is in check and has no legal moves anywhere, so it is checkmate
-        return true;
+        // Checkmate: the team is in check and has no legal move to escape it
+        return isInCheck(teamColor) && !hasAnyValidMove(teamColor);
     }
 
     /**
@@ -302,40 +268,32 @@ public class ChessGame {
      * @return True if the specified team is in stalemate, otherwise false
      */
     public boolean isInStalemate(TeamColor teamColor) {
+        // Stalemate: the team is not in check but still has no legal move
+        return !isInCheck(teamColor) && !hasAnyValidMove(teamColor);
+    }
 
-        // Stalemate only happens when the team is NOT in check.
-        // If the team IS in check, it cannot be stalemate (it might be checkmate instead).
-        if (isInCheck(teamColor)) {
-            return false;
-        }
-
-        // Now check whether this team has ANY legal move at all.
-        // Loop through every row on the board (1 through 8)
+    /**
+     * Determines whether the given team has at least one legal move anywhere on
+     * the board.
+     *
+     * @param teamColor the team to test
+     * @return true if any piece of that team has a legal move
+     */
+    private boolean hasAnyValidMove(TeamColor teamColor) {
         for (int row = 1; row <= 8; row++) {
-
-            // Loop through every column on the board (1 through 8)
             for (int col = 1; col <= 8; col++) {
-
-                // Get the piece sitting at this square
                 ChessPosition pos = new ChessPosition(row, col);
                 ChessPiece piece = board.getPiece(pos);
-
-                // Only look at pieces that belong to the team we are checking
-                if (piece != null && piece.getTeamColor() == teamColor) {
-
-                    // Get all the legal moves for this piece
-                    Collection<ChessMove> legalMoves = validMoves(pos);
-
-                    // If this piece has at least one legal move, it is NOT stalemate
-                    if (legalMoves != null && !legalMoves.isEmpty()) {
-                        return false;
-                    }
+                if (piece == null || piece.getTeamColor() != teamColor) {
+                    continue;
+                }
+                Collection<ChessMove> legalMoves = validMoves(pos);
+                if (legalMoves != null && !legalMoves.isEmpty()) {
+                    return true;
                 }
             }
         }
-
-        // The team is not in check but has no legal moves anywhere, so it is stalemate
-        return true;
+        return false;
     }
 
     /**

@@ -11,7 +11,8 @@ import java.util.Objects;
  */
 public class ChessBoard {
 
-    ChessPiece[][] squares = new ChessPiece[8][8]; // 0 - 7, this is the coordinate location of the piece, not the type. This line is creating a board (8x8) where each square can hold a chess piece but is set to null by default.
+    // 8x8 grid (indices 0-7) holding the piece at each square, or null when empty.
+    ChessPiece[][] squares = new ChessPiece[8][8];
 
     public ChessBoard() {
 
@@ -24,7 +25,8 @@ public class ChessBoard {
      * @param piece    the piece to add
      */
     public void addPiece(ChessPosition position, ChessPiece piece) {
-        squares[position.getRow() - 1][position.getColumn() - 1] = piece; // The numbers being passed in from the tests are 1-based rather than 0-based (Java) so we need to add a conversion (-1) to account for that.
+        // Positions are 1-based; subtract 1 to map onto the 0-based array.
+        squares[position.getRow() - 1][position.getColumn() - 1] = piece;
     }
 
     /**

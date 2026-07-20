@@ -105,3 +105,193 @@ public class Compress {
     private void usage() { System.out.println("\nUSAGE: java Compress <input-file> <output-file>"); }
     }
 ```
+
+## Reading and Writing Binary-Formatted Data
+- The DataOutputStream (or DataInputStream) class lets you write binary-formatted data values
+- The `DataOutputStream(OutputStream out` constructor wraps a DataOutputStream around any OutputStream
+
+
+# Readers and Writers 
+
+---
+
+- The `reader` interface is used to read characters sequentially from a data source
+- The `Writer`interface is used to write characters sequentially to a data destination
+
+Example:
+
+```java
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+
+public class CopyFileExample {
+
+    public static void main(String [] args) throws IOException {
+        if(args.length != 2) {
+            printUsage();
+        } else {
+            CopyFileExample fileCopier = new CopyFileExample();
+            fileCopier.copy(args[0], args[1]);
+        }
+    }
+
+    private static void printUsage() {
+        System.out.println("USAGE: java CopyFileExample fromFile toFile");
+    }
+
+    private void copy(String from, String to) throws IOException {
+        File fromFile = new File(from);
+        File toFile = new File(to);
+
+        try(FileReader fr = new FileReader(fromFile);
+            BufferedReader br = new BufferedReader(fr);
+
+            FileWriter fw = new FileWriter(toFile);
+            BufferedWriter bw = new BufferedWriter(fw);
+            PrintWriter pw = new PrintWriter(bw)) {
+
+            String line;
+            while((line = br.readLine()) != null) {
+                pw.println(line);
+            }
+        }
+    }
+}
+```
+
+- The `PrintWriter` class lets you write text-formatted data values 
+- The `Scanner` class lets you read text-formatted data values
+
+
+
+# Scanner Class
+
+---
+
+- **Good for when you need to tokenize the input**
+- Read from a `File`, `InputStream`, or `Reader`
+- Can specify the delimit character(s) as a regular expression
+  - Defaults to delimiting white space: \s+
+
+## Example 1:
+```java
+// Example 1:
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.Scanner;
+
+public class ScannerExample1 {
+  public static void main(String[] args) throws FileNotFoundException {
+    ScannerExample1 scannerExample = new ScannerExample1();
+
+    if(args.length == 1) {
+      scannerExample.processFile(args[0]);
+    } else {
+      scannerExample.usage();
+    }
+  }
+
+  public void processFile(String filePath) throws FileNotFoundException {
+    File file = new File(filePath);
+
+    try(Scanner scanner = new Scanner(file)) {
+      while (scanner.hasNext()) {
+        String str = scanner.next();
+        System.out.println(str);
+      }
+    }
+  }
+
+  private void usage() {
+    System.out.println("\nUSAGE: java ScannerExample2 <input-file>");
+  }
+}
+```
+## Example 2:
+```java
+// Example 2:
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.Scanner;
+
+public class ScannerExample2 {
+  public static void main(String[] args) throws FileNotFoundException {
+    ScannerExample2 scannerExample = new ScannerExample2();
+
+    if(args.length == 1) {
+      scannerExample.processFile(args[0]);
+    } else {
+      scannerExample.usage();
+    }
+  }
+
+  public void processFile(String filePath) throws FileNotFoundException {
+    File file = new File(filePath);
+
+    try(Scanner scanner = new Scanner(file)) {
+      scanner.useDelimiter("((#[^\\n]*\\n)|(\\s+))+");
+
+      while (scanner.hasNext()) {
+        String str = scanner.next();
+        System.out.println(str);
+      }
+    }
+  }
+
+  private void usage() {
+    System.out.println("\nUSAGE: java ScannerExample2 <input-file>");
+  }
+}
+```
+
+
+## Example 3:
+```java
+// Example 3:
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.Scanner;
+
+public class ScannerExample3 {
+  public static void main(String[] args) throws IOException {
+    ScannerExample3 scannerExample = new ScannerExample3();
+
+    if(args.length == 1) {
+      scannerExample.processFile(args[0]);
+    } else {
+      scannerExample.usage();
+    }
+  }
+
+  public void processFile(String filePath) throws IOException {
+    File file = new File(filePath);
+
+    try(FileReader fr = new FileReader(file);
+        BufferedReader br = new BufferedReader(fr);
+        Scanner scanner = new Scanner(br)) {
+      scanner.useDelimiter("((#[^\\n]*\\n)|(\\s+))+");
+
+      while (scanner.hasNext()) {
+        String str = scanner.next();
+        System.out.println(str);
+      }
+    }
+  }
+
+  private void usage() {
+    System.out.println("\nUSAGE: java ScannerExample3 <input-file>");
+  }
+}
+```
+

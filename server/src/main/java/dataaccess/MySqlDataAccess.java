@@ -6,7 +6,6 @@ import model.AuthData;
 import model.GameData;
 import model.UserData;
 
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -20,10 +19,6 @@ public class MySqlDataAccess implements DataAccess {
         configureDatabase();
     }
 
-    /**
-     * Creates the database (if needed) and all tables (if needed). Safe to run on
-     * every startup because every statement uses IF NOT EXISTS.
-     */
     private void configureDatabase() throws DataAccessException {
         DatabaseManager.createDatabase();
         try (var conn = DatabaseManager.getConnection()) {
@@ -67,8 +62,6 @@ public class MySqlDataAccess implements DataAccess {
 
     @Override
     public void clear() throws DataAccessException {
-        // Order doesn't matter here since there are no foreign keys. TRUNCATE also
-        // resets game's AUTO_INCREMENT counter, which the tests expect after a clear.
         try (var conn = DatabaseManager.getConnection()) {
             for (var table : new String[]{"auth", "game", "user"}) {
                 try (var ps = conn.prepareStatement("TRUNCATE TABLE " + table)) {
@@ -82,8 +75,6 @@ public class MySqlDataAccess implements DataAccess {
 
     @Override
     public void createUser(UserData user) throws DataAccessException {
-        // NOTE: user.password() must already be a BCrypt hash by the time it gets here.
-        // Hashing belongs in UserService.register, not in the DAO.
         var statement = "INSERT INTO user (username, password, email) VALUES (?, ?, ?)";
         try (var conn = DatabaseManager.getConnection();
              var ps = conn.prepareStatement(statement)) {
@@ -109,7 +100,7 @@ public class MySqlDataAccess implements DataAccess {
                             rs.getString("password"),
                             rs.getString("email"));
                 }
-                return null; // no such user — matches MemoryDataAccess behavior
+                return null;
             }
         } catch (SQLException ex) {
             throw new DataAccessException("Unable to read user: " + ex.getMessage(), ex);
@@ -118,8 +109,6 @@ public class MySqlDataAccess implements DataAccess {
 
     @Override
     public GameData createGame(String gameName) throws DataAccessException {
-        // The DB assigns gameID via AUTO_INCREMENT. We ask for the generated key back
-        // so we can return a fully-populated GameData, matching MemoryDataAccess.
         var newGame = new ChessGame();
         var json = gson.toJson(newGame);
         var statement = "INSERT INTO game (whiteUsername, blackUsername, gameName, game) VALUES (?, ?, ?, ?)";
@@ -141,27 +130,48 @@ public class MySqlDataAccess implements DataAccess {
         }
     }
 
-    // ----------------------------------------------------------------------------------
-    // TODO: the methods below are yours to implement. Guidance for each is in the comment.
-    // The four above cover every pattern you need — copy their shape.
-    // ----------------------------------------------------------------------------------
-
     @Override
     public void createAuth(AuthData auth) throws DataAccessException {
-        // Like createUser: a plain INSERT into auth (authToken, username). No hashing.
-        throw new DataAccessException("createAuth not implemented");
+        var statement = "INSERT INTO auth (authToken, username) VALUES (?, ?)";
+        try (var conn = DatabaseManager.getConnection();
+             var ps = conn.prepareStatement(statement)) {
+            ps.setString(1, auth.authToken());
+            ps.setString(2, auth.username());
+            ps.executeUpdate();
+        } catch (SQLException ex) {
+            throw new DataAccessException("Unable to create auth: " + ex.getMessage(), ex);
+        }
     }
 
     @Override
     public AuthData getAuth(String authToken) throws DataAccessException {
-        // Like getUser: SELECT ... WHERE authToken = ?, build an AuthData or return null.
-        throw new DataAccessException("getAuth not implemented");
+        var statement = "SELECT authToken, username FROM auth WHERE authToken = ?";
+        try (var conn = DatabaseManager.getConnection();
+             var ps = conn.prepareStatement(statement)) {
+            ps.setString(1, authToken);
+            try (var rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return new AuthData(
+                            rs.getString("authToken"),
+                            rs.getString("username"));
+                }
+                return null;
+            }
+        } catch (SQLException ex) {
+            throw new DataAccessException("Unable to read auth: " + ex.getMessage(), ex);
+        }
     }
 
     @Override
     public void deleteAuth(String authToken) throws DataAccessException {
-        // A DELETE FROM auth WHERE authToken = ?. Same try/prepare/executeUpdate shape.
-        throw new DataAccessException("deleteAuth not implemented");
+        var statement = "DELETE FROM auth WHERE authToken = ?";
+        try (var conn = DatabaseManager.getConnection();
+             var ps = conn.prepareStatement(statement)) {
+            ps.setString(1, authToken);
+            ps.executeUpdate();
+        } catch (SQLException ex) {
+            throw new DataAccessException("Unable to delete auth: " + ex.getMessage(), ex);
+        }
     }
 
     @Override
@@ -172,9 +182,15 @@ public class MySqlDataAccess implements DataAccess {
             ps.setInt(1, gameID);
             try (var rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    return readGame(rs);
+                    var chessGame = gson.fromJson(rs.getString("game"), ChessGame.class);
+                    return new GameData(
+                            rs.getInt("gameID"),
+                            rs.getString("whiteUsername"),
+                            rs.getString("blackUsername"),
+                            rs.getString("gameName"),
+                            chessGame);
                 }
-                return null; // no such game — matches MemoryDataAccess behavior
+                return null;
             }
         } catch (SQLException ex) {
             throw new DataAccessException("Unable to read game: " + ex.getMessage(), ex);
@@ -189,7 +205,13 @@ public class MySqlDataAccess implements DataAccess {
              var ps = conn.prepareStatement(statement);
              var rs = ps.executeQuery()) {
             while (rs.next()) {
-                result.add(readGame(rs));
+                var chessGame = gson.fromJson(rs.getString("game"), ChessGame.class);
+                result.add(new GameData(
+                        rs.getInt("gameID"),
+                        rs.getString("whiteUsername"),
+                        rs.getString("blackUsername"),
+                        rs.getString("gameName"),
+                        chessGame));
             }
             return result;
         } catch (SQLException ex) {
@@ -215,20 +237,5 @@ public class MySqlDataAccess implements DataAccess {
         } catch (SQLException ex) {
             throw new DataAccessException("Unable to update game: " + ex.getMessage(), ex);
         }
-    }
-
-    /**
-     * Builds a GameData from the current row of a ResultSet. The 'game' column holds
-     * the ChessGame as a JSON string, so it is deserialized back into an object here.
-     * Shared by getGame and listGames.
-     */
-    private GameData readGame(ResultSet rs) throws SQLException {
-        var chessGame = gson.fromJson(rs.getString("game"), ChessGame.class);
-        return new GameData(
-                rs.getInt("gameID"),
-                rs.getString("whiteUsername"),
-                rs.getString("blackUsername"),
-                rs.getString("gameName"),
-                chessGame);
     }
 }

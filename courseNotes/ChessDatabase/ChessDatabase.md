@@ -152,3 +152,8 @@ To pass off this assignment use the course [auto-grading](https://cs240.click/) 
 - 🎥 [ChessGame Serialization/Deserialization (6:17)](https://byu.hosted.panopto.com/Panopto/Pages/Viewer.aspx?id=5b9f4b5e-a3ae-442f-a311-b193015f1b34) - [[transcript]](https://github.com/user-attachments/files/17707104/CS_240_ChessGame_Serialization_Deserialization_Transcript.pdf)
 - 🎥 [Database Unit Tests (1:52)](https://byu.hosted.panopto.com/Panopto/Pages/Viewer.aspx?id=ab5a02c1-bf04-4514-afc0-b19301611d40) - [[transcript]](https://github.com/user-attachments/files/17707118/CS_240_Database_Unit_Tests_Transcript.pdf)
 - 🎥 [Grading Rubric (2:02)](https://byu.hosted.panopto.com/Panopto/Pages/Viewer.aspx?id=1b8d4c3b-1e76-4474-9007-b19301620058) - [[transcript]](https://github.com/user-attachments/files/17707133/CS_240_Grading_Rubric_Transcript.pdf)
+
+
+Implemented getGame, listGames, and updateGame, and added a shared                                                                                                                                                                                       
+readGame helper that deserializes the ChessGame JSON column into a                                                                                                                                                                                       
+GameData object.

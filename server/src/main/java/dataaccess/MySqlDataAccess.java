@@ -166,23 +166,69 @@ public class MySqlDataAccess implements DataAccess {
 
     @Override
     public GameData getGame(int gameID) throws DataAccessException {
-        // Like getUser, but the 'game' column is JSON text: deserialize it back into a
-        // ChessGame with gson.fromJson(rs.getString("game"), ChessGame.class).
-        // Consider a private readGame(ResultSet) helper — getGame and listGames share it.
-        throw new DataAccessException("getGame not implemented");
+        var statement = "SELECT gameID, whiteUsername, blackUsername, gameName, game FROM game WHERE gameID = ?";
+        try (var conn = DatabaseManager.getConnection();
+             var ps = conn.prepareStatement(statement)) {
+            ps.setInt(1, gameID);
+            try (var rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return readGame(rs);
+                }
+                return null; // no such game — matches MemoryDataAccess behavior
+            }
+        } catch (SQLException ex) {
+            throw new DataAccessException("Unable to read game: " + ex.getMessage(), ex);
+        }
     }
 
     @Override
     public Collection<GameData> listGames() throws DataAccessException {
-        // SELECT all columns with no WHERE, loop while (rs.next()), add each to an
-        // ArrayList<GameData>. Reuse the same row->GameData logic as getGame.
-        throw new DataAccessException("listGames not implemented");
+        var result = new ArrayList<GameData>();
+        var statement = "SELECT gameID, whiteUsername, blackUsername, gameName, game FROM game";
+        try (var conn = DatabaseManager.getConnection();
+             var ps = conn.prepareStatement(statement);
+             var rs = ps.executeQuery()) {
+            while (rs.next()) {
+                result.add(readGame(rs));
+            }
+            return result;
+        } catch (SQLException ex) {
+            throw new DataAccessException("Unable to list games: " + ex.getMessage(), ex);
+        }
     }
 
     @Override
     public void updateGame(GameData game) throws DataAccessException {
-        // UPDATE game SET whiteUsername=?, blackUsername=?, gameName=?, game=? WHERE gameID=?
-        // Re-serialize game.game() to JSON for the game column.
-        throw new DataAccessException("updateGame not implemented");
+        var statement = """
+                UPDATE game
+                SET whiteUsername = ?, blackUsername = ?, gameName = ?, game = ?
+                WHERE gameID = ?
+                """;
+        try (var conn = DatabaseManager.getConnection();
+             var ps = conn.prepareStatement(statement)) {
+            ps.setString(1, game.whiteUsername());
+            ps.setString(2, game.blackUsername());
+            ps.setString(3, game.gameName());
+            ps.setString(4, gson.toJson(game.game()));
+            ps.setInt(5, game.gameID());
+            ps.executeUpdate();
+        } catch (SQLException ex) {
+            throw new DataAccessException("Unable to update game: " + ex.getMessage(), ex);
+        }
+    }
+
+    /**
+     * Builds a GameData from the current row of a ResultSet. The 'game' column holds
+     * the ChessGame as a JSON string, so it is deserialized back into an object here.
+     * Shared by getGame and listGames.
+     */
+    private GameData readGame(ResultSet rs) throws SQLException {
+        var chessGame = gson.fromJson(rs.getString("game"), ChessGame.class);
+        return new GameData(
+                rs.getInt("gameID"),
+                rs.getString("whiteUsername"),
+                rs.getString("blackUsername"),
+                rs.getString("gameName"),
+                chessGame);
     }
 }

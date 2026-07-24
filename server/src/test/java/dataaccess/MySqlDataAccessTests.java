@@ -4,159 +4,173 @@ import chess.ChessGame;
 import model.AuthData;
 import model.GameData;
 import model.UserData;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collection;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class MySqlDataAccessTests {
 
     private MySqlDataAccess dataAccess;
 
     @BeforeEach
-    public void setup() throws DataAccessException {
+    public void setup() throws Exception {
         dataAccess = new MySqlDataAccess();
         dataAccess.clear();
     }
 
     @Test
-    public void clearPositive() throws DataAccessException {
+    public void clearSuccess() throws Exception {
         dataAccess.createUser(new UserData("user1", "pass1", "u1@mail.com"));
         dataAccess.createAuth(new AuthData("token1", "user1"));
         dataAccess.createGame("game1");
 
         dataAccess.clear();
 
-        assertNull(dataAccess.getUser("user1"));
-        assertNull(dataAccess.getAuth("token1"));
-        assertTrue(dataAccess.listGames().isEmpty());
+        Assertions.assertNull(dataAccess.getUser("user1"));
+        Assertions.assertNull(dataAccess.getAuth("token1"));
+        Assertions.assertTrue(dataAccess.listGames().isEmpty());
     }
 
     @Test
-    public void createUserPositive() throws DataAccessException {
+    public void createUserSuccess() throws Exception {
         UserData user = new UserData("user1", "pass1", "u1@mail.com");
         dataAccess.createUser(user);
-        assertEquals(user, dataAccess.getUser("user1"));
+
+        Assertions.assertEquals(user, dataAccess.getUser("user1"));
     }
 
     @Test
-    public void createUserNegative() throws DataAccessException {
+    public void createUserDuplicateFails() throws Exception {
         UserData user = new UserData("user1", "pass1", "u1@mail.com");
         dataAccess.createUser(user);
-        assertThrows(DataAccessException.class, () -> dataAccess.createUser(user));
+
+        Assertions.assertThrows(DataAccessException.class, () -> dataAccess.createUser(user));
     }
 
     @Test
-    public void getUserPositive() throws DataAccessException {
+    public void getUserSuccess() throws Exception {
         UserData user = new UserData("user1", "pass1", "u1@mail.com");
         dataAccess.createUser(user);
-        assertEquals(user, dataAccess.getUser("user1"));
+
+        Assertions.assertEquals(user, dataAccess.getUser("user1"));
     }
 
     @Test
-    public void getUserNegative() throws DataAccessException {
-        assertNull(dataAccess.getUser("nonexistent"));
+    public void getUserMissingReturnsNull() throws Exception {
+        Assertions.assertNull(dataAccess.getUser("nonexistent"));
     }
 
     @Test
-    public void createAuthPositive() throws DataAccessException {
+    public void createAuthSuccess() throws Exception {
         AuthData auth = new AuthData("token1", "user1");
         dataAccess.createAuth(auth);
-        assertEquals(auth, dataAccess.getAuth("token1"));
+
+        Assertions.assertEquals(auth, dataAccess.getAuth("token1"));
     }
 
     @Test
-    public void createAuthNegative() throws DataAccessException {
+    public void createAuthDuplicateFails() throws Exception {
         AuthData auth = new AuthData("token1", "user1");
         dataAccess.createAuth(auth);
-        assertThrows(DataAccessException.class, () -> dataAccess.createAuth(auth));
+
+        Assertions.assertThrows(DataAccessException.class, () -> dataAccess.createAuth(auth));
     }
 
     @Test
-    public void getAuthPositive() throws DataAccessException {
+    public void getAuthSuccess() throws Exception {
         AuthData auth = new AuthData("token1", "user1");
         dataAccess.createAuth(auth);
-        assertEquals(auth, dataAccess.getAuth("token1"));
+
+        Assertions.assertEquals(auth, dataAccess.getAuth("token1"));
     }
 
     @Test
-    public void getAuthNegative() throws DataAccessException {
-        assertNull(dataAccess.getAuth("nonexistent"));
+    public void getAuthMissingReturnsNull() throws Exception {
+        Assertions.assertNull(dataAccess.getAuth("nonexistent"));
     }
 
     @Test
-    public void deleteAuthPositive() throws DataAccessException {
+    public void deleteAuthSuccess() throws Exception {
         AuthData auth = new AuthData("token1", "user1");
         dataAccess.createAuth(auth);
+
         dataAccess.deleteAuth("token1");
-        assertNull(dataAccess.getAuth("token1"));
+
+        Assertions.assertNull(dataAccess.getAuth("token1"));
     }
 
     @Test
-    public void deleteAuthNegative() throws DataAccessException {
+    public void deleteAuthMissingKeepsOthers() throws Exception {
         AuthData auth = new AuthData("token1", "user1");
         dataAccess.createAuth(auth);
+
         dataAccess.deleteAuth("nonexistent");
-        assertNotNull(dataAccess.getAuth("token1"));
+
+        Assertions.assertNotNull(dataAccess.getAuth("token1"));
     }
 
     @Test
-    public void createGamePositive() throws DataAccessException {
+    public void createGameSuccess() throws Exception {
         GameData game = dataAccess.createGame("game1");
-        assertNotNull(dataAccess.getGame(game.gameID()));
-        assertEquals("game1", game.gameName());
+
+        Assertions.assertNotNull(dataAccess.getGame(game.gameID()));
+        Assertions.assertEquals("game1", game.gameName());
     }
 
     @Test
-    public void createGameNegative() {
-        assertThrows(DataAccessException.class, () -> dataAccess.createGame(null));
+    public void createGameNullNameFails() {
+        Assertions.assertThrows(DataAccessException.class, () -> dataAccess.createGame(null));
     }
 
     @Test
-    public void getGamePositive() throws DataAccessException {
+    public void getGameSuccess() throws Exception {
         GameData game = dataAccess.createGame("game1");
-        assertEquals(game.gameID(), dataAccess.getGame(game.gameID()).gameID());
+
+        Assertions.assertEquals(game.gameID(), dataAccess.getGame(game.gameID()).gameID());
     }
 
     @Test
-    public void getGameNegative() throws DataAccessException {
-        assertNull(dataAccess.getGame(9999));
+    public void getGameMissingReturnsNull() throws Exception {
+        Assertions.assertNull(dataAccess.getGame(9999));
     }
 
     @Test
-    public void listGamesPositive() throws DataAccessException {
+    public void listGamesSuccess() throws Exception {
         dataAccess.createGame("game1");
         dataAccess.createGame("game2");
+
         Collection<GameData> games = dataAccess.listGames();
-        assertEquals(2, games.size());
+
+        Assertions.assertEquals(2, games.size());
     }
 
     @Test
-    public void listGamesNegative() throws DataAccessException {
+    public void listGamesEmptyReturnsEmpty() throws Exception {
         Collection<GameData> games = dataAccess.listGames();
-        assertTrue(games.isEmpty());
+
+        Assertions.assertTrue(games.isEmpty());
     }
 
     @Test
-    public void updateGamePositive() throws DataAccessException {
+    public void updateGameSuccess() throws Exception {
         GameData game = dataAccess.createGame("game1");
         GameData updated = new GameData(game.gameID(), "white", "black", "game1", new ChessGame());
+
         dataAccess.updateGame(updated);
+
         GameData result = dataAccess.getGame(game.gameID());
-        assertEquals("white", result.whiteUsername());
-        assertEquals("black", result.blackUsername());
+        Assertions.assertEquals("white", result.whiteUsername());
+        Assertions.assertEquals("black", result.blackUsername());
     }
 
     @Test
-    public void updateGameNegative() throws DataAccessException {
+    public void updateGameMissingDoesNothing() throws Exception {
         GameData game = new GameData(9999, "white", "black", "game1", new ChessGame());
+
         dataAccess.updateGame(game);
-        assertNull(dataAccess.getGame(9999));
+
+        Assertions.assertNull(dataAccess.getGame(9999));
     }
 }

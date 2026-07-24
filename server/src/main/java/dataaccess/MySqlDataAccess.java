@@ -6,6 +6,9 @@ import model.AuthData;
 import model.GameData;
 import model.UserData;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -21,52 +24,50 @@ public class MySqlDataAccess implements DataAccess {
 
     private void configureDatabase() throws DataAccessException {
         DatabaseManager.createDatabase();
-        try (var conn = DatabaseManager.getConnection()) {
-            for (var statement : CREATE_STATEMENTS) {
-                try (var preparedStatement = conn.prepareStatement(statement)) {
-                    preparedStatement.executeUpdate();
-                }
+
+        String createUserTable = "CREATE TABLE IF NOT EXISTS user (" +
+                "username VARCHAR(256) NOT NULL, " +
+                "password VARCHAR(256) NOT NULL, " +
+                "email VARCHAR(256) NOT NULL, " +
+                "PRIMARY KEY (username))";
+        String createAuthTable = "CREATE TABLE IF NOT EXISTS auth (" +
+                "authToken VARCHAR(256) NOT NULL, " +
+                "username VARCHAR(256) NOT NULL, " +
+                "PRIMARY KEY (authToken))";
+        String createGameTable = "CREATE TABLE IF NOT EXISTS game (" +
+                "gameID INT NOT NULL AUTO_INCREMENT, " +
+                "whiteUsername VARCHAR(256), " +
+                "blackUsername VARCHAR(256), " +
+                "gameName VARCHAR(256) NOT NULL, " +
+                "game TEXT NOT NULL, " +
+                "PRIMARY KEY (gameID))";
+
+        try (Connection conn = DatabaseManager.getConnection()) {
+            try (PreparedStatement preparedStatement = conn.prepareStatement(createUserTable)) {
+                preparedStatement.executeUpdate();
+            }
+            try (PreparedStatement preparedStatement = conn.prepareStatement(createAuthTable)) {
+                preparedStatement.executeUpdate();
+            }
+            try (PreparedStatement preparedStatement = conn.prepareStatement(createGameTable)) {
+                preparedStatement.executeUpdate();
             }
         } catch (SQLException ex) {
             throw new DataAccessException("Unable to configure database: " + ex.getMessage(), ex);
         }
     }
 
-    private static final String[] CREATE_STATEMENTS = {
-            """
-            CREATE TABLE IF NOT EXISTS user (
-                username VARCHAR(256) NOT NULL,
-                password VARCHAR(256) NOT NULL,
-                email    VARCHAR(256) NOT NULL,
-                PRIMARY KEY (username)
-            )
-            """,
-            """
-            CREATE TABLE IF NOT EXISTS auth (
-                authToken VARCHAR(256) NOT NULL,
-                username  VARCHAR(256) NOT NULL,
-                PRIMARY KEY (authToken)
-            )
-            """,
-            """
-            CREATE TABLE IF NOT EXISTS game (
-                gameID        INT NOT NULL AUTO_INCREMENT,
-                whiteUsername VARCHAR(256),
-                blackUsername VARCHAR(256),
-                gameName      VARCHAR(256) NOT NULL,
-                game          TEXT NOT NULL,
-                PRIMARY KEY (gameID)
-            )
-            """
-    };
-
     @Override
     public void clear() throws DataAccessException {
-        try (var conn = DatabaseManager.getConnection()) {
-            for (var table : new String[]{"auth", "game", "user"}) {
-                try (var ps = conn.prepareStatement("TRUNCATE TABLE " + table)) {
-                    ps.executeUpdate();
-                }
+        try (Connection conn = DatabaseManager.getConnection()) {
+            try (PreparedStatement preparedStatement = conn.prepareStatement("TRUNCATE TABLE auth")) {
+                preparedStatement.executeUpdate();
+            }
+            try (PreparedStatement preparedStatement = conn.prepareStatement("TRUNCATE TABLE game")) {
+                preparedStatement.executeUpdate();
+            }
+            try (PreparedStatement preparedStatement = conn.prepareStatement("TRUNCATE TABLE user")) {
+                preparedStatement.executeUpdate();
             }
         } catch (SQLException ex) {
             throw new DataAccessException("Unable to clear database: " + ex.getMessage(), ex);
@@ -75,13 +76,13 @@ public class MySqlDataAccess implements DataAccess {
 
     @Override
     public void createUser(UserData user) throws DataAccessException {
-        var statement = "INSERT INTO user (username, password, email) VALUES (?, ?, ?)";
-        try (var conn = DatabaseManager.getConnection();
-             var ps = conn.prepareStatement(statement)) {
-            ps.setString(1, user.username());
-            ps.setString(2, user.password());
-            ps.setString(3, user.email());
-            ps.executeUpdate();
+        String statement = "INSERT INTO user (username, password, email) VALUES (?, ?, ?)";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement preparedStatement = conn.prepareStatement(statement)) {
+            preparedStatement.setString(1, user.username());
+            preparedStatement.setString(2, user.password());
+            preparedStatement.setString(3, user.email());
+            preparedStatement.executeUpdate();
         } catch (SQLException ex) {
             throw new DataAccessException("Unable to create user: " + ex.getMessage(), ex);
         }
@@ -89,16 +90,17 @@ public class MySqlDataAccess implements DataAccess {
 
     @Override
     public UserData getUser(String username) throws DataAccessException {
-        var statement = "SELECT username, password, email FROM user WHERE username = ?";
-        try (var conn = DatabaseManager.getConnection();
-             var ps = conn.prepareStatement(statement)) {
-            ps.setString(1, username);
-            try (var rs = ps.executeQuery()) {
+        String statement = "SELECT username, password, email FROM user WHERE username = ?";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement preparedStatement = conn.prepareStatement(statement)) {
+            preparedStatement.setString(1, username);
+            try (ResultSet rs = preparedStatement.executeQuery()) {
                 if (rs.next()) {
-                    return new UserData(
+                    UserData user = new UserData(
                             rs.getString("username"),
                             rs.getString("password"),
                             rs.getString("email"));
+                    return user;
                 }
                 return null;
             }
@@ -109,21 +111,22 @@ public class MySqlDataAccess implements DataAccess {
 
     @Override
     public GameData createGame(String gameName) throws DataAccessException {
-        var newGame = new ChessGame();
-        var json = gson.toJson(newGame);
-        var statement = "INSERT INTO game (whiteUsername, blackUsername, gameName, game) VALUES (?, ?, ?, ?)";
-        try (var conn = DatabaseManager.getConnection();
-             var ps = conn.prepareStatement(statement, Statement.RETURN_GENERATED_KEYS)) {
-            ps.setString(1, null);
-            ps.setString(2, null);
-            ps.setString(3, gameName);
-            ps.setString(4, json);
-            ps.executeUpdate();
+        ChessGame newGame = new ChessGame();
+        String json = gson.toJson(newGame);
+        String statement = "INSERT INTO game (whiteUsername, blackUsername, gameName, game) VALUES (?, ?, ?, ?)";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement preparedStatement = conn.prepareStatement(statement, Statement.RETURN_GENERATED_KEYS)) {
+            preparedStatement.setString(1, null);
+            preparedStatement.setString(2, null);
+            preparedStatement.setString(3, gameName);
+            preparedStatement.setString(4, json);
+            preparedStatement.executeUpdate();
 
-            try (var generatedKeys = ps.getGeneratedKeys()) {
+            try (ResultSet generatedKeys = preparedStatement.getGeneratedKeys()) {
                 generatedKeys.next();
                 int gameID = generatedKeys.getInt(1);
-                return new GameData(gameID, null, null, gameName, newGame);
+                GameData newGameData = new GameData(gameID, null, null, gameName, newGame);
+                return newGameData;
             }
         } catch (SQLException ex) {
             throw new DataAccessException("Unable to create game: " + ex.getMessage(), ex);
@@ -132,12 +135,12 @@ public class MySqlDataAccess implements DataAccess {
 
     @Override
     public void createAuth(AuthData auth) throws DataAccessException {
-        var statement = "INSERT INTO auth (authToken, username) VALUES (?, ?)";
-        try (var conn = DatabaseManager.getConnection();
-             var ps = conn.prepareStatement(statement)) {
-            ps.setString(1, auth.authToken());
-            ps.setString(2, auth.username());
-            ps.executeUpdate();
+        String statement = "INSERT INTO auth (authToken, username) VALUES (?, ?)";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement preparedStatement = conn.prepareStatement(statement)) {
+            preparedStatement.setString(1, auth.authToken());
+            preparedStatement.setString(2, auth.username());
+            preparedStatement.executeUpdate();
         } catch (SQLException ex) {
             throw new DataAccessException("Unable to create auth: " + ex.getMessage(), ex);
         }
@@ -145,15 +148,16 @@ public class MySqlDataAccess implements DataAccess {
 
     @Override
     public AuthData getAuth(String authToken) throws DataAccessException {
-        var statement = "SELECT authToken, username FROM auth WHERE authToken = ?";
-        try (var conn = DatabaseManager.getConnection();
-             var ps = conn.prepareStatement(statement)) {
-            ps.setString(1, authToken);
-            try (var rs = ps.executeQuery()) {
+        String statement = "SELECT authToken, username FROM auth WHERE authToken = ?";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement preparedStatement = conn.prepareStatement(statement)) {
+            preparedStatement.setString(1, authToken);
+            try (ResultSet rs = preparedStatement.executeQuery()) {
                 if (rs.next()) {
-                    return new AuthData(
+                    AuthData auth = new AuthData(
                             rs.getString("authToken"),
                             rs.getString("username"));
+                    return auth;
                 }
                 return null;
             }
@@ -164,11 +168,11 @@ public class MySqlDataAccess implements DataAccess {
 
     @Override
     public void deleteAuth(String authToken) throws DataAccessException {
-        var statement = "DELETE FROM auth WHERE authToken = ?";
-        try (var conn = DatabaseManager.getConnection();
-             var ps = conn.prepareStatement(statement)) {
-            ps.setString(1, authToken);
-            ps.executeUpdate();
+        String statement = "DELETE FROM auth WHERE authToken = ?";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement preparedStatement = conn.prepareStatement(statement)) {
+            preparedStatement.setString(1, authToken);
+            preparedStatement.executeUpdate();
         } catch (SQLException ex) {
             throw new DataAccessException("Unable to delete auth: " + ex.getMessage(), ex);
         }
@@ -176,19 +180,20 @@ public class MySqlDataAccess implements DataAccess {
 
     @Override
     public GameData getGame(int gameID) throws DataAccessException {
-        var statement = "SELECT gameID, whiteUsername, blackUsername, gameName, game FROM game WHERE gameID = ?";
-        try (var conn = DatabaseManager.getConnection();
-             var ps = conn.prepareStatement(statement)) {
-            ps.setInt(1, gameID);
-            try (var rs = ps.executeQuery()) {
+        String statement = "SELECT gameID, whiteUsername, blackUsername, gameName, game FROM game WHERE gameID = ?";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement preparedStatement = conn.prepareStatement(statement)) {
+            preparedStatement.setInt(1, gameID);
+            try (ResultSet rs = preparedStatement.executeQuery()) {
                 if (rs.next()) {
-                    var chessGame = gson.fromJson(rs.getString("game"), ChessGame.class);
-                    return new GameData(
+                    ChessGame chessGame = gson.fromJson(rs.getString("game"), ChessGame.class);
+                    GameData game = new GameData(
                             rs.getInt("gameID"),
                             rs.getString("whiteUsername"),
                             rs.getString("blackUsername"),
                             rs.getString("gameName"),
                             chessGame);
+                    return game;
                 }
                 return null;
             }
@@ -199,21 +204,22 @@ public class MySqlDataAccess implements DataAccess {
 
     @Override
     public Collection<GameData> listGames() throws DataAccessException {
-        var result = new ArrayList<GameData>();
-        var statement = "SELECT gameID, whiteUsername, blackUsername, gameName, game FROM game";
-        try (var conn = DatabaseManager.getConnection();
-             var ps = conn.prepareStatement(statement);
-             var rs = ps.executeQuery()) {
+        Collection<GameData> games = new ArrayList<>();
+        String statement = "SELECT gameID, whiteUsername, blackUsername, gameName, game FROM game";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement preparedStatement = conn.prepareStatement(statement);
+             ResultSet rs = preparedStatement.executeQuery()) {
             while (rs.next()) {
-                var chessGame = gson.fromJson(rs.getString("game"), ChessGame.class);
-                result.add(new GameData(
+                ChessGame chessGame = gson.fromJson(rs.getString("game"), ChessGame.class);
+                GameData game = new GameData(
                         rs.getInt("gameID"),
                         rs.getString("whiteUsername"),
                         rs.getString("blackUsername"),
                         rs.getString("gameName"),
-                        chessGame));
+                        chessGame);
+                games.add(game);
             }
-            return result;
+            return games;
         } catch (SQLException ex) {
             throw new DataAccessException("Unable to list games: " + ex.getMessage(), ex);
         }
@@ -221,19 +227,15 @@ public class MySqlDataAccess implements DataAccess {
 
     @Override
     public void updateGame(GameData game) throws DataAccessException {
-        var statement = """
-                UPDATE game
-                SET whiteUsername = ?, blackUsername = ?, gameName = ?, game = ?
-                WHERE gameID = ?
-                """;
-        try (var conn = DatabaseManager.getConnection();
-             var ps = conn.prepareStatement(statement)) {
-            ps.setString(1, game.whiteUsername());
-            ps.setString(2, game.blackUsername());
-            ps.setString(3, game.gameName());
-            ps.setString(4, gson.toJson(game.game()));
-            ps.setInt(5, game.gameID());
-            ps.executeUpdate();
+        String statement = "UPDATE game SET whiteUsername = ?, blackUsername = ?, gameName = ?, game = ? WHERE gameID = ?";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement preparedStatement = conn.prepareStatement(statement)) {
+            preparedStatement.setString(1, game.whiteUsername());
+            preparedStatement.setString(2, game.blackUsername());
+            preparedStatement.setString(3, game.gameName());
+            preparedStatement.setString(4, gson.toJson(game.game()));
+            preparedStatement.setInt(5, game.gameID());
+            preparedStatement.executeUpdate();
         } catch (SQLException ex) {
             throw new DataAccessException("Unable to update game: " + ex.getMessage(), ex);
         }

@@ -64,7 +64,7 @@ public class ServerFacade {
     }
 
     public void joinGame(String authToken, int gameId, String playerColor) throws Exception {
-        var body = Map.of("playerColor", olayerColor, "gameId", gameId);
+        var body = Map.of("playerColor", playerColor, "gameId", gameId);
         makeRequest("PUT", "/game", body, authToken);
     }
 }

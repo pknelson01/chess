@@ -1,9 +1,22 @@
 package client;
 
+import java.net.HttpURLConnection;
+import java.net.URI;
+
 public class ServerFacade {
     private final String serverUrl;
     public ServerFacade(String serverUrl) {
         this.serverUrl = serverUrl;
+    }
+
+    private Object makeRequest(String method, String path, Object request, String authToken) throws Exception{
+        var url = new URI(serverUrl + path).toUrl();
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestMethod(method);
+        connection.setRequestProperty("Content-Type", "application/json");
+        if (authToken != null) {
+            connection.setRequestProperty("Authorization", authToken);
+        }
     }
 
 

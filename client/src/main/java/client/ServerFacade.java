@@ -45,23 +45,26 @@ public class ServerFacade {
         return makeRequest("POST", "/user", body, null);
     }
 
-    public Object login(String username, String password) {
-        return null;
+    public Object login(String username, String password) throws Exception {
+        var body = Map.of("username", username, "password", password);
+        return makeRequest("POST", "/session", body, null);
     }
 
-    public void logout(String authToken) {
-        return;
+    public void logout(String authToken) throws Exception {
+        makeRequest("DELETE", "/session", null, authToken);
     }
 
-    public Object listGames(String authToken) {
-        return null;
+    public Object listGames(String authToken) throws Exception {
+        return makeRequest("GET", "/game", null, authToken);
     }
 
-    public Object createGame(String authToken, String gameName) {
-        return null;
+    public Object createGame(String authToken, String gameName) throws Exception {
+        var body = Map.of("gameName", gameName);
+        return makeRequest("POST", "/game", body, authToken);
     }
 
-    public void joinGame(String authToken, int gameId, String playerColor) {
-        return;
+    public void joinGame(String authToken, int gameId, String playerColor) throws Exception {
+        var body = Map.of("playerColor", olayerColor, "gameId", gameId);
+        makeRequest("PUT", "/game", body, authToken);
     }
 }

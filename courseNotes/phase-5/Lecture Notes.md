@@ -8,3 +8,6 @@
 ## Phase 6:
 - Gameplay
 
+## Notes:
+- REPL = Read-Eval-Print-Loop
+- 

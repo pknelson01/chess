@@ -30,6 +30,7 @@ public class Repl {
                 } else {
                     try {
                         var result = facade.login(tokens[1], tokens[2]);
+                        authToken = result.authToken();
                         System.out.println("Logged in successfully!");
                     } catch (Exception e) {
                         System.out.println("Error Message: " + e.getMessage());
@@ -41,6 +42,7 @@ public class Repl {
                 } else {
                     try {
                         var result = facade.register(tokens[1], tokens[2], tokens[3]);
+                        authToken = result.authToken();
                         System.out.println("Registered and logged in successfully!");
                     } catch (Exception e) {
                         System.out.println("Error Message: " + e.getMessage());

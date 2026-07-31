@@ -43,6 +43,10 @@ public class ServerFacade {
         }
     }
 
+    public void clear() throws Exception {
+        makeRequest("DELETE", "/db", null, null);
+    }
+
     public AuthData register(String username, String password, String email) throws Exception {
         var body = Map.of("username", username, "password", password, "email", email);
         return new Gson().fromJson(

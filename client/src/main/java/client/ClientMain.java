@@ -23,4 +23,14 @@ public class ClientMain {
         String help = "Print this message: \"h\", \"help\"";
         System.out.printf("Options:\n%s\n%s\n%s\n%s\n", login, register, exit, help);
     }
+
+    public static void postloginHelp() {
+        String help = "Print this message: \"h\", \"help\"";
+        String logout = "Logout: \"lo\", \"logout\"";
+        String create = "Create a game: \"c\", \"create\" <GAME_NAME>";
+        String list = "List all games: \"ls\", \"list\"";
+        String play = "Play a game: \"p\", \"play\" <GAME_NUMBER> <WHITE|BLACK>";
+        String observe = "Observe a game: \"o\", \"observe\" <GAME_NUMBER>";
+        System.out.printf("Options:\n%s\n%s\n%s\n%s\n%s\n%s\n", help, logout, create, list, play, observe);
+    }
 }

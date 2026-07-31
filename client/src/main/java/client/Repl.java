@@ -10,7 +10,7 @@ public class Repl {
         facade = new ServerFacade(serverUrl);
     }
 
-    public void run () {
+    public void run() {
         System.out.println(" ♕ Welcome to Parker's Chess Application. Sign in to start.\n");
         ClientMain.help();
 
@@ -32,8 +32,9 @@ public class Repl {
                         var result = facade.login(tokens[1], tokens[2]);
                         authToken = result.authToken();
                         System.out.println("Logged in successfully!");
+                        postloginLoop(scanner);
                     } catch (Exception e) {
-                        System.out.println("Error Message: " + e.getMessage());
+                        System.out.println("Error: " + e.getMessage());
                     }
                 }
             } else if (tokens[0].equals("register") || tokens[0].equals("r")) {
@@ -44,12 +45,40 @@ public class Repl {
                         var result = facade.register(tokens[1], tokens[2], tokens[3]);
                         authToken = result.authToken();
                         System.out.println("Registered and logged in successfully!");
+                        postloginLoop(scanner);
                     } catch (Exception e) {
-                        System.out.println("Error Message: " + e.getMessage());
+                        System.out.println("Error: " + e.getMessage());
                     }
                 }
             } else if (tokens[0].equals("quit") || tokens[0].equals("q")) {
-                    System.out.println("Goodbye, chess master!");
+                System.out.println("Goodbye, chess master!");
+            } else {
+                System.out.println("Unknown command. Type 'help' for options.");
+            }
+        }
+    }
+
+    private void postloginLoop(Scanner scanner) {
+        String line = "";
+        while (!line.equals("logout") && !line.equals("lo")) {
+            System.out.print("[LOGGED_IN] >>> ");
+            line = scanner.nextLine().trim().toLowerCase();
+            String[] tokens = line.split(" ");
+
+            if (tokens[0].equals("help") || tokens[0].equals("h")) {
+                ClientMain.postloginHelp();
+            } else if (tokens[0].equals("logout") || tokens[0].equals("lo")) {
+                try {
+                    facade.logout(authToken);
+                    authToken = null;
+                    System.out.println("Logged out successfully!");
+                } catch (Exception e) {
+                    System.out.println("Error: " + e.getMessage());
+                }
+            } else if (tokens[0].equals("create") || tokens[0].equals("c")) {
+            } else if (tokens[0].equals("list") || tokens[0].equals("ls")) {
+            } else if (tokens[0].equals("play") || tokens[0].equals("p")) {
+            } else if (tokens[0].equals("observe") || tokens[0].equals("o")) {
             } else {
                 System.out.println("Unknown command. Type 'help' for options.");
             }

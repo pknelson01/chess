@@ -1,6 +1,8 @@
 package client;
 
 import com.google.gson.Gson;
+import model.AuthData;
+
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -40,14 +42,16 @@ public class ServerFacade {
     }
 
 
-    public Object register(String username, String password, String email) throws Exception {
+    public AuthData register(String username, String password, String email) throws Exception {
         var body = Map.of("username", username, "password", password, "email", email);
-        return makeRequest("POST", "/user", body, null);
+        return new Gson().fromJson(
+                new Gson().toJson(makeRequest("POST", "/user", body, null)), AuthData.class);
     }
 
-    public Object login(String username, String password) throws Exception {
+    public AuthData login(String username, String password) throws Exception {
         var body = Map.of("username", username, "password", password);
-        return makeRequest("POST", "/session", body, null);
+        return new Gson().fromJson(
+                new Gson().toJson(makeRequest("POST", "/session", body, null)), AuthData.class);
     }
 
     public void logout(String authToken) throws Exception {

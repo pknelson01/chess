@@ -1,10 +1,14 @@
 package client;
 
+import chess.ChessBoard;
+import model.GameData;
+
 import java.util.Scanner;
 
 public class Repl {
     private final ServerFacade facade;
     private String authToken;
+    private GameData[] lastGameList;
 
     public Repl(String serverUrl) {
         facade = new ServerFacade(serverUrl);
@@ -76,9 +80,82 @@ public class Repl {
                     System.out.println("Error: " + e.getMessage());
                 }
             } else if (tokens[0].equals("create") || tokens[0].equals("c")) {
+                if (tokens.length < 2) {
+                    System.out.println("Usage: create <GAME_NAME>");
+                } else {
+                    try {
+                        facade.createGame(authToken, tokens[1]);
+                        System.out.println("Game '" + tokens[1] + "' created successfully!");
+                    } catch (Exception e) {
+                        System.out.println("Error: " + e.getMessage());
+                    }
+                }
             } else if (tokens[0].equals("list") || tokens[0].equals("ls")) {
+                try {
+                    lastGameList = facade.listGames(authToken);
+                    if (lastGameList.length == 0) {
+                        System.out.println("No games available.");
+                    } else {
+                        for (int i = 0; i < lastGameList.length; i++) {
+                            GameData game = lastGameList[i];
+                            String white = game.whiteUsername() != null ? game.whiteUsername() : "(open)";
+                            String black = game.blackUsername() != null ? game.blackUsername() : "(open)";
+                            System.out.println((i + 1) + ". " + game.gameName() + " | White: " + white + " | Black: " + black);
+                        }
+                    }
+                } catch (Exception e) {
+                    System.out.println("Error: " + e.getMessage());
+                }
             } else if (tokens[0].equals("play") || tokens[0].equals("p")) {
+                if (tokens.length < 3) {
+                    System.out.println("Usage: play <GAME_NUMBER> <WHITE|BLACK>");
+                } else if (lastGameList == null) {
+                    System.out.println("Please list games first.");
+                } else {
+                    try {
+                        int gameNum = Integer.parseInt(tokens[1]);
+                        if (gameNum < 1 || gameNum > lastGameList.length) {
+                            System.out.println("Invalid game number.");
+                        } else {
+                            String color = tokens[2].toUpperCase();
+                            if (!color.equals("WHITE") && !color.equals("BLACK")) {
+                                System.out.println("Color must be WHITE or BLACK.");
+                            } else {
+                                int gameId = lastGameList[gameNum - 1].gameID();
+                                facade.joinGame(authToken, gameId, color);
+                                ChessBoard board = new ChessBoard();
+                                board.resetBoard();
+                                boolean whitePerspective = color.equals("WHITE");
+                                BoardDrawer.draw(board, whitePerspective);
+                            }
+                        }
+                    } catch (NumberFormatException e) {
+                        System.out.println("Invalid game number.");
+                    } catch (Exception e) {
+                        System.out.println("Error: " + e.getMessage());
+                    }
+                }
             } else if (tokens[0].equals("observe") || tokens[0].equals("o")) {
+                if (tokens.length < 2) {
+                    System.out.println("Usage: observe <GAME_NUMBER>");
+                } else if (lastGameList == null) {
+                    System.out.println("Please list games first.");
+                } else {
+                    try {
+                        int gameNum = Integer.parseInt(tokens[1]);
+                        if (gameNum < 1 || gameNum > lastGameList.length) {
+                            System.out.println("Invalid game number.");
+                        } else {
+                            ChessBoard board = new ChessBoard();
+                            board.resetBoard();
+                            BoardDrawer.draw(board, true);
+                        }
+                    } catch (NumberFormatException e) {
+                        System.out.println("Invalid game number.");
+                    } catch (Exception e) {
+                        System.out.println("Error: " + e.getMessage());
+                    }
+                }
             } else {
                 System.out.println("Unknown command. Type 'help' for options.");
             }

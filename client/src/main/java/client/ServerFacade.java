@@ -2,6 +2,7 @@ package client;
 
 import com.google.gson.Gson;
 import model.AuthData;
+import model.GameData;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -16,7 +17,7 @@ public class ServerFacade {
         this.serverUrl = serverUrl;
     }
 
-    private Object makeRequest(String method, String path, Object request, String authToken) throws Exception{
+    private Object makeRequest(String method, String path, Object request, String authToken) throws Exception {
         var url = new URI(serverUrl + path).toURL();
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setRequestMethod(method);
@@ -35,12 +36,12 @@ public class ServerFacade {
         int status = connection.getResponseCode();
         if (status != 200) {
             throw new Exception("HTTP Error: " + status);
-        } try (InputStream is = connection.getInputStream();
-               InputStreamReader reader = new InputStreamReader(is)) {
+        }
+        try (InputStream is = connection.getInputStream();
+             InputStreamReader reader = new InputStreamReader(is)) {
             return new Gson().fromJson(reader, Object.class);
         }
     }
-
 
     public AuthData register(String username, String password, String email) throws Exception {
         var body = Map.of("username", username, "password", password, "email", email);
@@ -58,13 +59,17 @@ public class ServerFacade {
         makeRequest("DELETE", "/session", null, authToken);
     }
 
-    public Object listGames(String authToken) throws Exception {
-        return makeRequest("GET", "/game", null, authToken);
+    public GameData[] listGames(String authToken) throws Exception {
+        var result = makeRequest("GET", "/game", null, authToken);
+        var json = new Gson().toJson(result);
+        var map = new Gson().fromJson(json, Map.class);
+        var gamesJson = new Gson().toJson(map.get("games"));
+        return new Gson().fromJson(gamesJson, GameData[].class);
     }
 
-    public Object createGame(String authToken, String gameName) throws Exception {
+    public void createGame(String authToken, String gameName) throws Exception {
         var body = Map.of("gameName", gameName);
-        return makeRequest("POST", "/game", body, authToken);
+        makeRequest("POST", "/game", body, authToken);
     }
 
     public void joinGame(String authToken, int gameId, String playerColor) throws Exception {

@@ -38,7 +38,7 @@ public class Repl {
                         System.out.println("Logged in successfully!");
                         postloginLoop(scanner);
                     } catch (Exception e) {
-                        System.out.println("Error: " + e.getMessage());
+                        System.out.println("Invalid Username or Password.");
                     }
                 }
             } else if (tokens[0].equals("register") || tokens[0].equals("r")) {
@@ -51,7 +51,7 @@ public class Repl {
                         System.out.println("Registered and logged in successfully!");
                         postloginLoop(scanner);
                     } catch (Exception e) {
-                        System.out.println("Error: " + e.getMessage());
+                        System.out.println("There is already an account registered with that username.");
                     }
                 }
             } else if (tokens[0].equals("quit") || tokens[0].equals("q")) {
@@ -77,7 +77,7 @@ public class Repl {
                     authToken = null;
                     System.out.println("Logged out successfully!");
                 } catch (Exception e) {
-                    System.out.println("Error: " + e.getMessage());
+                    System.out.println("Already Logged Out.");
                 }
             } else if (tokens[0].equals("create") || tokens[0].equals("c")) {
                 if (tokens.length < 2) {
@@ -132,7 +132,7 @@ public class Repl {
                     } catch (NumberFormatException e) {
                         System.out.println("Invalid game number.");
                     } catch (Exception e) {
-                        System.out.println("Error: " + e.getMessage());
+                        System.out.println("Game already taken.");
                     }
                 }
             } else if (tokens[0].equals("observe") || tokens[0].equals("o")) {

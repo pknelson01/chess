@@ -16,5 +16,5 @@
 6. Highlight legal moves
     - Allows the user to input the piece for which they want to highlight legal moves. The selected piece's current square and all squares it can legally move to are highlighted. This is a local operation and has no effect on remote users' screens.
 
-> [!IMPORTANT] 
+> [!WARNING] 
 > I don't know how hard this will be but notifications are a feature I need to build out, see [Phase-6 Overview Notes](phase-6_overview.md)

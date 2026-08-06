@@ -6,6 +6,7 @@ import dataaccess.DataAccessException;
 import dataaccess.MySqlDataAccess;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
+import server.websocket.WebSocketHandler;
 import service.*;
 import service.requestresult.*;
 
@@ -18,6 +19,7 @@ public class Server {
     private final ClearService clearService;
     private final UserService userService;
     private final GameService gameService;
+    private final WebSocketHandler webSocketHandler;
 
     public Server() {
         try {
@@ -28,8 +30,13 @@ public class Server {
         clearService = new ClearService(dataAccess);
         userService = new UserService(dataAccess);
         gameService = new GameService(dataAccess);
+        webSocketHandler = new WebSocketHandler(dataAccess);
 
         javalin = Javalin.create(config -> config.staticFiles.add("web"));
+
+        javalin.ws("/ws", ws -> {
+            ws.onMessage(webSocketHandler::onMessage);
+        });
 
         javalin.delete("/db", this::clear);
         javalin.post("/user", this::register);

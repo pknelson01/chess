@@ -1,17 +1,40 @@
 package client;
 
-import chess.ChessBoard;
+import chess.ChessGame;
 import model.GameData;
+import websocket.commands.UserGameCommand;
 
 import java.util.Scanner;
 
-public class Repl {
+public class Repl implements ServerMessageObserver {
     private final ServerFacade facade;
+    private final String serverUrl;
     private String authToken;
     private GameData[] lastGameList;
+    private WebSocketCommunicator webSocket;
+    private ChessGame currentGame;
+    private int currentGameID;
+    private boolean whitePerspective;
 
     public Repl(String serverUrl) {
+        this.serverUrl = serverUrl;
         facade = new ServerFacade(serverUrl);
+    }
+
+    @Override
+    public void loadGame(ChessGame game) {
+        currentGame = game;
+        BoardDrawer.draw(game.getBoard(), whitePerspective);
+    }
+
+    @Override
+    public void showNotification(String message) {
+        System.out.println(message);
+    }
+
+    @Override
+    public void showError(String errorMessage) {
+        System.out.println(errorMessage);
     }
 
     public void run() {
@@ -123,10 +146,9 @@ public class Repl {
                             } else {
                                 int gameId = lastGameList[gameNum - 1].gameID();
                                 facade.joinGame(authToken, gameId, color);
-                                ChessBoard board = new ChessBoard();
-                                board.resetBoard();
-                                boolean whitePerspective = color.equals("WHITE");
-                                BoardDrawer.draw(board, whitePerspective);
+                                whitePerspective = color.equals("WHITE");
+                                connectToGame(gameId);
+                                gameplayLoop(scanner);
                             }
                         }
                     } catch (NumberFormatException e) {
@@ -146,9 +168,10 @@ public class Repl {
                         if (gameNum < 1 || gameNum > lastGameList.length) {
                             System.out.println("Invalid game number.");
                         } else {
-                            ChessBoard board = new ChessBoard();
-                            board.resetBoard();
-                            BoardDrawer.draw(board, true);
+                            int gameId = lastGameList[gameNum - 1].gameID();
+                            whitePerspective = true;
+                            connectToGame(gameId);
+                            gameplayLoop(scanner);
                         }
                     } catch (NumberFormatException e) {
                         System.out.println("Invalid game number.");
@@ -160,5 +183,49 @@ public class Repl {
                 System.out.println("Unknown command. Type 'help' for options.");
             }
         }
+    }
+
+    private void connectToGame(int gameId) throws Exception {
+        currentGameID = gameId;
+        webSocket = new WebSocketCommunicator(serverUrl, this);
+        UserGameCommand command = new UserGameCommand(UserGameCommand.CommandType.CONNECT, authToken, gameId);
+        webSocket.sendCommand(command);
+    }
+
+    private void gameplayLoop(Scanner scanner) {
+        ClientMain.gameplayHelp();
+
+        String line = "";
+        while (!line.equals("leave") && !line.equals("lv")) {
+            System.out.print("[IN_GAME] >>> ");
+            line = scanner.nextLine().trim().toLowerCase();
+            String[] tokens = line.split(" ");
+
+            if (tokens[0].equals("help") || tokens[0].equals("h")) {
+                ClientMain.gameplayHelp();
+            } else if (tokens[0].equals("redraw") || tokens[0].equals("rd")) {
+                if (currentGame == null) {
+                    System.out.println("The game has not loaded yet.");
+                } else {
+                    BoardDrawer.draw(currentGame.getBoard(), whitePerspective);
+                }
+            } else if (tokens[0].equals("leave") || tokens[0].equals("lv")) {
+                leaveGame();
+            } else {
+                System.out.println("Unknown command. Type 'help' for options.");
+            }
+        }
+    }
+
+    private void leaveGame() {
+        try {
+            UserGameCommand command = new UserGameCommand(UserGameCommand.CommandType.LEAVE, authToken, currentGameID);
+            webSocket.sendCommand(command);
+            webSocket.close();
+        } catch (Exception e) {
+            System.out.println("Error: " + e.getMessage());
+        }
+        currentGame = null;
+        System.out.println("You have left the game.");
     }
 }

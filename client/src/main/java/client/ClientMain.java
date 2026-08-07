@@ -33,4 +33,14 @@ public class ClientMain {
         String observe = "Observe a game: \"o\", \"observe\" <GAME_NUMBER>";
         System.out.printf("Options:\n%s\n%s\n%s\n%s\n%s\n%s\n", help, logout, create, list, play, observe);
     }
+
+    public static void gameplayHelp() {
+        String help = "Print this message: \"h\", \"help\"";
+        String redraw = "Redraw the chess board: \"rd\", \"redraw\"";
+        String leave = "Leave the game: \"lv\", \"leave\"";
+        String move = "Make a move: \"m\", \"move\" <FROM> <TO>";
+        String resign = "Resign the game: \"rs\", \"resign\"";
+        String highlight = "Highlight legal moves: \"hl\", \"highlight\" <SQUARE>";
+        System.out.printf("Options:\n%s\n%s\n%s\n%s\n%s\n%s\n", help, redraw, leave, move, resign, highlight);
+    }
 }

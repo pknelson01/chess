@@ -1,7 +1,11 @@
 package client;
 
 import chess.ChessGame;
+import chess.ChessMove;
+import chess.ChessPiece;
+import chess.ChessPosition;
 import model.GameData;
+import websocket.commands.MakeMoveCommand;
 import websocket.commands.UserGameCommand;
 
 import java.util.Scanner;
@@ -211,10 +215,70 @@ public class Repl implements ServerMessageObserver {
                 }
             } else if (tokens[0].equals("leave") || tokens[0].equals("lv")) {
                 leaveGame();
+            } else if (tokens[0].equals("move") || tokens[0].equals("m")) {
+                if (tokens.length < 3) {
+                    System.out.println("Usage: move <FROM> <TO> [QUEEN|ROOK|BISHOP|KNIGHT]");
+                } else {
+                    makeMove(tokens);
+                }
             } else {
                 System.out.println("Unknown command. Type 'help' for options.");
             }
         }
+    }
+
+    private void makeMove(String[] tokens) {
+        ChessPosition start = parsePosition(tokens[1]);
+        ChessPosition end = parsePosition(tokens[2]);
+        if (start == null || end == null) {
+            System.out.println("Squares must look like e2.");
+            return;
+        }
+
+        ChessPiece.PieceType promotion = null;
+        if (tokens.length > 3) {
+            promotion = parsePromotion(tokens[3]);
+            if (promotion == null) {
+                System.out.println("Promotion must be QUEEN, ROOK, BISHOP, or KNIGHT.");
+                return;
+            }
+        }
+
+        try {
+            ChessMove move = new ChessMove(start, end, promotion);
+            MakeMoveCommand command = new MakeMoveCommand(authToken, currentGameID, move);
+            webSocket.sendCommand(command);
+        } catch (Exception e) {
+            System.out.println("Error: " + e.getMessage());
+        }
+    }
+
+    private ChessPosition parsePosition(String square) {
+        if (square.length() != 2) {
+            return null;
+        }
+        char column = square.charAt(0);
+        char row = square.charAt(1);
+        if (column < 'a' || column > 'h' || row < '1' || row > '8') {
+            return null;
+        }
+        return new ChessPosition(row - '0', column - 'a' + 1);
+    }
+
+    private ChessPiece.PieceType parsePromotion(String name) {
+        if (name.equals("queen") || name.equals("q")) {
+            return ChessPiece.PieceType.QUEEN;
+        }
+        if (name.equals("rook") || name.equals("r")) {
+            return ChessPiece.PieceType.ROOK;
+        }
+        if (name.equals("bishop") || name.equals("b")) {
+            return ChessPiece.PieceType.BISHOP;
+        }
+        if (name.equals("knight") || name.equals("n")) {
+            return ChessPiece.PieceType.KNIGHT;
+        }
+        return null;
     }
 
     private void leaveGame() {

@@ -18,6 +18,8 @@ public class ChessGame {
     // This tracks whose turn it is (WHITE or BLACK)
     private TeamColor teamTurn;
 
+    private boolean gameOver;
+
     public ChessGame() {
         // Create a brand new chess board
         this.board = new ChessBoard();
@@ -45,6 +47,14 @@ public class ChessGame {
     public void setTeamTurn(TeamColor team) {
         // Update whose turn it is to whatever team is passed in
         this.teamTurn = team;
+    }
+
+    public boolean isGameOver() {
+        return gameOver;
+    }
+
+    public void setGameOver(boolean gameOver) {
+        this.gameOver = gameOver;
     }
 
     /**

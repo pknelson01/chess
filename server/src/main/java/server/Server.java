@@ -9,6 +9,7 @@ import io.javalin.http.Context;
 import server.websocket.WebSocketHandler;
 import service.*;
 import service.requestresult.*;
+import java.time.Duration;
 
 public class Server {
 
@@ -32,7 +33,10 @@ public class Server {
         gameService = new GameService(dataAccess);
         webSocketHandler = new WebSocketHandler(dataAccess);
 
-        javalin = Javalin.create(config -> config.staticFiles.add("web"));
+        javalin = Javalin.create(config -> {
+            config.staticFiles.add("web");
+            config.jetty.modifyWebSocketServletFactory(factory -> factory.setIdleTimeout(Duration.ofHours(1)));
+        });
 
         javalin.ws("/ws", ws -> {
             ws.onMessage(webSocketHandler::onMessage);

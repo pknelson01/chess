@@ -136,7 +136,7 @@ public class WebSocketHandler {
             LoadGameMessage loadGame = new LoadGameMessage(game);
             connections.broadcast(gameID, null, gson.toJson(loadGame));
 
-            String moveText = username + " moved " + describeMove(command.getMove());
+            String moveText = "'" + username + "'" + " moved " + describeMove(command.getMove());
             connections.broadcast(gameID, username, gson.toJson(new NotificationMessage(moveText)));
 
             if (endOfGameText != null) {

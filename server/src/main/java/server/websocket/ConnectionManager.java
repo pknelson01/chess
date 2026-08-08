@@ -19,6 +19,17 @@ public class ConnectionManager {
         }
     }
 
+    public void remove(WsContext context) {
+        for (Integer gameID : connections.keySet()) {
+            ConcurrentHashMap<String, WsContext> gameConnections = connections.get(gameID);
+            for (String username : gameConnections.keySet()) {
+                if (gameConnections.get(username) == context) {
+                    gameConnections.remove(username);
+                }
+            }
+        }
+    }
+
     public void broadcast(int gameID, String excludeUsername, String message) {
         if (!connections.containsKey(gameID)) {
             return;
@@ -26,7 +37,10 @@ public class ConnectionManager {
         ConcurrentHashMap<String, WsContext> gameConnections = connections.get(gameID);
         for (String username : gameConnections.keySet()) {
             if (!username.equals(excludeUsername)) {
-                gameConnections.get(username).send(message);
+                WsContext context = gameConnections.get(username);
+                if (context.session.isOpen()) {
+                    context.send(message);
+                }
             }
         }
     }

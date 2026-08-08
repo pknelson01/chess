@@ -8,6 +8,7 @@ import model.GameData;
 import websocket.commands.MakeMoveCommand;
 import websocket.commands.UserGameCommand;
 
+import java.util.ArrayList;
 import java.util.Scanner;
 
 public class Repl implements ServerMessageObserver {
@@ -221,6 +222,14 @@ public class Repl implements ServerMessageObserver {
                 } else {
                     makeMove(tokens);
                 }
+            } else if (tokens[0].equals("resign") || tokens[0].equals("rs")) {
+                resignGame(scanner);
+            } else if (tokens[0].equals("highlight") || tokens[0].equals("hl")) {
+                if (tokens.length < 2) {
+                    System.out.println("Usage: highlight <SQUARE>");
+                } else {
+                    highlightMoves(tokens[1]);
+                }
             } else {
                 System.out.println("Unknown command. Type 'help' for options.");
             }
@@ -279,6 +288,46 @@ public class Repl implements ServerMessageObserver {
             return ChessPiece.PieceType.KNIGHT;
         }
         return null;
+    }
+
+    private void highlightMoves(String square) {
+        if (currentGame == null) {
+            System.out.println("The game has not loaded yet.");
+            return;
+        }
+
+        ChessPosition position = parsePosition(square);
+        if (position == null) {
+            System.out.println("Squares must look like e2.");
+            return;
+        }
+
+        if (currentGame.getBoard().getPiece(position) == null) {
+            System.out.println("There is no piece on that square.");
+            return;
+        }
+
+        ArrayList<ChessPosition> endPositions = new ArrayList<>();
+        for (ChessMove move : currentGame.validMoves(position)) {
+            endPositions.add(move.getEndPosition());
+        }
+        BoardDrawer.draw(currentGame.getBoard(), whitePerspective, position, endPositions);
+    }
+
+    private void resignGame(Scanner scanner) {
+        System.out.print("Are you sure you want to resign? (yes/no): ");
+        String answer = scanner.nextLine().trim().toLowerCase();
+        if (!answer.equals("yes") && !answer.equals("y")) {
+            System.out.println("Resign cancelled.");
+            return;
+        }
+
+        try {
+            UserGameCommand command = new UserGameCommand(UserGameCommand.CommandType.RESIGN, authToken, currentGameID);
+            webSocket.sendCommand(command);
+        } catch (Exception e) {
+            System.out.println("Error: " + e.getMessage());
+        }
     }
 
     private void leaveGame() {

@@ -6,6 +6,7 @@ import chess.ChessPosition;
 import chess.InvalidMoveException;
 import com.google.gson.Gson;
 import dataaccess.DataAccess;
+import io.javalin.websocket.WsCloseContext;
 import io.javalin.websocket.WsMessageContext;
 import model.AuthData;
 import model.GameData;
@@ -36,6 +37,16 @@ public class WebSocketHandler {
             MakeMoveCommand moveCommand = gson.fromJson(json, MakeMoveCommand.class);
             makeMove(moveCommand, context);
         }
+        if (command.getCommandType() == UserGameCommand.CommandType.LEAVE) {
+            leave(command, context);
+        }
+        if (command.getCommandType() == UserGameCommand.CommandType.RESIGN) {
+            resign(command, context);
+        }
+    }
+
+    public void onClose(WsCloseContext context) {
+        connections.remove(context);
     }
 
     private void connect(UserGameCommand command, WsMessageContext context) {
@@ -133,6 +144,86 @@ public class WebSocketHandler {
             }
         } catch (InvalidMoveException exception) {
             sendError(context, "Error: invalid move");
+        } catch (Exception exception) {
+            sendError(context, "Error: " + exception.getMessage());
+        }
+    }
+
+    private void leave(UserGameCommand command, WsMessageContext context) {
+        try {
+            AuthData auth = dataAccess.getAuth(command.getAuthToken());
+            if (auth == null) {
+                sendError(context, "Error: unauthorized");
+                return;
+            }
+
+            GameData gameData = dataAccess.getGame(command.getGameID());
+            if (gameData == null) {
+                sendError(context, "Error: game not found");
+                return;
+            }
+
+            String username = auth.username();
+            int gameID = command.getGameID();
+            ChessGame.TeamColor playerColor = getPlayerColor(gameData, username);
+
+            if (playerColor != null) {
+                String whiteUsername = gameData.whiteUsername();
+                String blackUsername = gameData.blackUsername();
+                if (playerColor == ChessGame.TeamColor.WHITE) {
+                    whiteUsername = null;
+                } else {
+                    blackUsername = null;
+                }
+                GameData updatedGame = new GameData(gameData.gameID(), whiteUsername, blackUsername,
+                        gameData.gameName(), gameData.game());
+                dataAccess.updateGame(updatedGame);
+            }
+
+            connections.remove(gameID, username);
+
+            String text = username + " left the game";
+            connections.broadcast(gameID, username, gson.toJson(new NotificationMessage(text)));
+        } catch (Exception exception) {
+            sendError(context, "Error: " + exception.getMessage());
+        }
+    }
+
+    private void resign(UserGameCommand command, WsMessageContext context) {
+        try {
+            AuthData auth = dataAccess.getAuth(command.getAuthToken());
+            if (auth == null) {
+                sendError(context, "Error: unauthorized");
+                return;
+            }
+
+            GameData gameData = dataAccess.getGame(command.getGameID());
+            if (gameData == null) {
+                sendError(context, "Error: game not found");
+                return;
+            }
+
+            String username = auth.username();
+            ChessGame game = gameData.game();
+
+            if (game.isGameOver()) {
+                sendError(context, "Error: the game is already over");
+                return;
+            }
+
+            ChessGame.TeamColor playerColor = getPlayerColor(gameData, username);
+            if (playerColor == null) {
+                sendError(context, "Error: observers cannot resign");
+                return;
+            }
+
+            game.setGameOver(true);
+            GameData updatedGame = new GameData(gameData.gameID(), gameData.whiteUsername(),
+                    gameData.blackUsername(), gameData.gameName(), game);
+            dataAccess.updateGame(updatedGame);
+
+            String text = username + " resigned the game";
+            connections.broadcast(command.getGameID(), null, gson.toJson(new NotificationMessage(text)));
         } catch (Exception exception) {
             sendError(context, "Error: " + exception.getMessage());
         }
